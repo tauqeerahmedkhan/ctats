@@ -4,7 +4,7 @@ import { useToast } from '../../context/ToastContext';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
 import { supabase } from '../../lib/supabase';
-import { User, Mail, Shield, UserPlus, Trash2, Eye, EyeOff, Key, Settings } from 'lucide-react';
+import { User, Mail, Shield, UserPlus, Trash2, Eye, EyeOff, Key, Settings, Users, Crown, UserCheck } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -124,11 +124,110 @@ export const UserSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">User Management</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">User Management & RBAC</h2>
         <p className="text-gray-600 mb-6">
-          Manage your account settings and security preferences.
+          Manage your account settings, security preferences, and role-based access control.
         </p>
       </div>
+
+      {/* User Management Location Guide */}
+      <Card title="Where to Manage Users">
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+          <div className="flex items-start">
+            <Users className="text-blue-500 mr-3 mt-0.5" size={20} />
+            <div>
+              <h3 className="text-sm font-medium text-blue-800 mb-2">User Management Locations</h3>
+              <div className="text-sm text-blue-700 space-y-2">
+                <p><strong>Current Page (Settings → User Management):</strong> Manage your personal account, password, and profile settings.</p>
+                <p><strong>Supabase Dashboard:</strong> For advanced user management, visit your Supabase project dashboard → Authentication → Users to:</p>
+                <ul className="list-disc list-inside ml-4 space-y-1">
+                  <li>Add new users and assign roles</li>
+                  <li>Manage user permissions and access levels</li>
+                  <li>View user activity and login history</li>
+                  <li>Configure authentication providers</li>
+                  <li>Set up email templates and policies</li>
+                </ul>
+                <p><strong>Application Level:</strong> Role-based access is enforced through Supabase RLS policies and user metadata.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* RBAC Information */}
+      <Card title="Role-Based Access Control (RBAC)">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+              <Crown className="text-yellow-500 mr-2" size={18} />
+              Available Roles
+            </h4>
+            <div className="space-y-3">
+              <div className="flex items-center p-3 bg-red-50 rounded-lg border border-red-100">
+                <Shield className="text-red-600 mr-3" size={16} />
+                <div>
+                  <div className="font-medium text-red-800">Admin</div>
+                  <div className="text-sm text-red-600">Full system access and management</div>
+                </div>
+              </div>
+              <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <UserCheck className="text-blue-600 mr-3" size={16} />
+                <div>
+                  <div className="font-medium text-blue-800">Manager</div>
+                  <div className="text-sm text-blue-600">Department-level access and reporting</div>
+                </div>
+              </div>
+              <div className="flex items-center p-3 bg-green-50 rounded-lg border border-green-100">
+                <User className="text-green-600 mr-3" size={16} />
+                <div>
+                  <div className="font-medium text-green-800">Employee</div>
+                  <div className="text-sm text-green-600">Limited self-service access</div>
+                </div>
+              </div>
+              <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <Eye className="text-gray-600 mr-3" size={16} />
+                <div>
+                  <div className="font-medium text-gray-800">Viewer</div>
+                  <div className="text-sm text-gray-600">Read-only access to reports</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+              <Shield className="text-blue-500 mr-2" size={18} />
+              Security Features
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Row-level security (RLS) policies</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Encrypted data transmission</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Secure cloud storage</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Audit trail for data changes</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Session management</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Password policies</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Current User Profile */}
       <div className="bg-gradient-to-r from-navy-50 to-teal-50 p-6 rounded-lg border border-navy-100">
@@ -168,11 +267,11 @@ export const UserSettings: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                User ID
+                Current Role
               </label>
               <div className="flex items-center p-3 bg-white rounded-md border border-gray-200">
-                <Shield className="text-gray-400 mr-3" size={18} />
-                <span className="text-gray-800 font-mono text-sm">{user.id}</span>
+                <Crown className="text-yellow-500 mr-3" size={18} />
+                <span className="text-gray-800 font-medium">Administrator</span>
               </div>
             </div>
 
@@ -328,6 +427,10 @@ export const UserSettings: React.FC = () => {
                 <span className="text-gray-600">Authentication:</span>
                 <span className="text-gray-800">Supabase Auth</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">RBAC:</span>
+                <span className="text-gray-800">Row Level Security</span>
+              </div>
             </div>
           </div>
 
@@ -349,6 +452,14 @@ export const UserSettings: React.FC = () => {
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                 <span className="text-gray-700">Data export/import</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Role-based access control</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-gray-700">Legacy data migration</span>
               </div>
             </div>
           </div>

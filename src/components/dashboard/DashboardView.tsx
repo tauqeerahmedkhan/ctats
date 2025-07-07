@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { Card } from '../common/Card';
+import { Button } from '../common/Button';
 import { getAttendanceSummary } from '../../services/attendanceService';
 import { getAllEmployees } from '../../services/employeeService';
 import { 
@@ -12,7 +13,11 @@ import {
   Building2,
   Briefcase,
   Calendar,
-  Zap
+  Zap,
+  UserPlus,
+  FileText,
+  Settings,
+  BarChart3
 } from 'lucide-react';
 
 export const DashboardView: React.FC = () => {
@@ -79,6 +84,12 @@ export const DashboardView: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const navigateTo = (view: string) => {
+    // This would typically use a router, but for this demo we'll use a simple approach
+    const event = new CustomEvent('navigate', { detail: view });
+    window.dispatchEvent(event);
   };
 
   if (isLoading) {
@@ -205,7 +216,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
+        {/* System Overview */}
         <Card title="System Overview">
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
@@ -236,26 +247,109 @@ export const DashboardView: React.FC = () => {
         <Card title="Quick Actions">
           <div className="space-y-4">
             <button 
-              onClick={() => window.location.hash = 'attendance'}
-              className="w-full flex items-center p-3 bg-navy-50 hover:bg-navy-100 rounded-lg transition-colors"
+              onClick={() => navigateTo('attendance')}
+              className="w-full flex items-center p-3 bg-navy-50 hover:bg-navy-100 rounded-lg transition-colors group"
             >
-              <Calendar className="text-navy-600 mr-3" size={20} />
-              <span className="text-gray-700">Mark Attendance</span>
+              <Calendar className="text-navy-600 mr-3 group-hover:scale-110 transition-transform" size={20} />
+              <div className="text-left">
+                <div className="text-gray-700 font-medium">Mark Attendance</div>
+                <div className="text-sm text-gray-500">Track daily employee attendance</div>
+              </div>
             </button>
+            
             <button 
-              onClick={() => window.location.hash = 'employees'}
-              className="w-full flex items-center p-3 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+              onClick={() => navigateTo('employees')}
+              className="w-full flex items-center p-3 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors group"
             >
-              <Users className="text-teal-600 mr-3" size={20} />
-              <span className="text-gray-700">Manage Employees</span>
+              <UserPlus className="text-teal-600 mr-3 group-hover:scale-110 transition-transform" size={20} />
+              <div className="text-left">
+                <div className="text-gray-700 font-medium">Manage Employees</div>
+                <div className="text-sm text-gray-500">Add, edit, and organize staff</div>
+              </div>
             </button>
+            
             <button 
-              onClick={() => window.location.hash = 'reports'}
-              className="w-full flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+              onClick={() => navigateTo('reports')}
+              className="w-full flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group"
             >
-              <TrendingUp className="text-purple-600 mr-3" size={20} />
-              <span className="text-gray-700">View Reports</span>
+              <BarChart3 className="text-purple-600 mr-3 group-hover:scale-110 transition-transform" size={20} />
+              <div className="text-left">
+                <div className="text-gray-700 font-medium">View Reports</div>
+                <div className="text-sm text-gray-500">Analytics and insights</div>
+              </div>
             </button>
+            
+            <button 
+              onClick={() => navigateTo('settings')}
+              className="w-full flex items-center p-3 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors group"
+            >
+              <Settings className="text-amber-600 mr-3 group-hover:scale-110 transition-transform" size={20} />
+              <div className="text-left">
+                <div className="text-gray-700 font-medium">System Settings</div>
+                <div className="text-sm text-gray-500">Configure holidays and shifts</div>
+              </div>
+            </button>
+          </div>
+        </Card>
+      </div>
+
+      {/* Recent Activity & Tips */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card title="System Status">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                <span className="text-gray-700">Database Connection</span>
+              </div>
+              <span className="text-green-600 font-medium">Active</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                <span className="text-gray-700">Authentication</span>
+              </div>
+              <span className="text-green-600 font-medium">Secure</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                <span className="text-gray-700">Data Sync</span>
+              </div>
+              <span className="text-blue-600 font-medium">Real-time</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Tips & Features">
+          <div className="space-y-3 text-sm">
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-start">
+                <FileText className="text-blue-600 mr-2 mt-0.5" size={16} />
+                <div>
+                  <div className="font-medium text-blue-800">Data Management</div>
+                  <div className="text-blue-600">Use the unified Data Management button to import/export data in multiple formats including legacy v1.0 support.</div>
+                </div>
+              </div>
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg">
+              <div className="flex items-start">
+                <Zap className="text-green-600 mr-2 mt-0.5" size={16} />
+                <div>
+                  <div className="font-medium text-green-800">Overtime Tracking</div>
+                  <div className="text-green-600">Overtime is automatically calculated for hours worked beyond 8 hours per day.</div>
+                </div>
+              </div>
+            </div>
+            <div className="p-3 bg-purple-50 rounded-lg">
+              <div className="flex items-start">
+                <Settings className="text-purple-600 mr-2 mt-0.5" size={16} />
+                <div>
+                  <div className="font-medium text-purple-800">User Management</div>
+                  <div className="text-purple-600">Manage users and RBAC settings in Settings → User Management. Advanced user management available in Supabase dashboard.</div>
+                </div>
+              </div>
+            </div>
           </div>
         </Card>
       </div>

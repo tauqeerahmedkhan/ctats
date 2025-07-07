@@ -40,6 +40,36 @@ export const HolidaySettings: React.FC<HolidaySettingsProps> = ({
     const updatedHolidays = holidays.filter((h) => h.date !== date);
     onChange(updatedHolidays);
   };
+
+  const addDefaultFridayHolidays = () => {
+    const currentYear = new Date().getFullYear();
+    const fridayHolidays: Holiday[] = [];
+    
+    // Add all Fridays of current year as holidays
+    for (let month = 0; month < 12; month++) {
+      const firstDay = new Date(currentYear, month, 1);
+      const lastDay = new Date(currentYear, month + 1, 0);
+      
+      for (let day = new Date(firstDay); day <= lastDay; day.setDate(day.getDate() + 1)) {
+        if (day.getDay() === 5) { // Friday
+          const dateStr = day.toISOString().split('T')[0];
+          // Only add if not already exists
+          if (!holidays.some(h => h.date === dateStr)) {
+            fridayHolidays.push({
+              date: dateStr,
+              name: 'Friday Holiday'
+            });
+          }
+        }
+      }
+    }
+    
+    if (fridayHolidays.length > 0) {
+      const updatedHolidays = [...holidays, ...fridayHolidays]
+        .sort((a, b) => a.date.localeCompare(b.date));
+      onChange(updatedHolidays);
+    }
+  };
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -86,6 +116,24 @@ export const HolidaySettings: React.FC<HolidaySettingsProps> = ({
         Add company holidays to prevent attendance marking on those days.
         Holidays are displayed in the attendance calendar and no employee is expected to work on these days.
       </p>
+
+      {/* Quick Actions */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="font-medium text-blue-800 mb-3">Quick Actions</h3>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            onClick={addDefaultFridayHolidays}
+            icon={<Calendar size={18} />}
+            size="sm"
+          >
+            Add All Fridays as Holidays
+          </Button>
+        </div>
+        <p className="text-sm text-blue-600 mt-2">
+          Quickly add common holiday patterns for the current year.
+        </p>
+      </div>
       
       {/* Add New Holiday */}
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
@@ -166,7 +214,7 @@ export const HolidaySettings: React.FC<HolidaySettingsProps> = ({
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <Gift className="mx-auto text-gray-400 mb-4" size={48} />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No holidays added yet</h3>
-          <p className="text-gray-500">Add your first holiday using the form above</p>
+          <p className="text-gray-500">Add your first holiday using the form above or quick actions</p>
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -241,6 +289,7 @@ export const HolidaySettings: React.FC<HolidaySettingsProps> = ({
               <p>• You can add holidays for any year, past or future</p>
               <p>• Holiday names should be descriptive and professional</p>
               <p>• Consider adding both national and company-specific holidays</p>
+              <p>• Use quick actions to add common holiday patterns like all Fridays</p>
             </div>
           </div>
         </div>

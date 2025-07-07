@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { useToast } from '../../context/ToastContext';
-import { Download, Upload, FileText, Database, AlertTriangle, Info } from 'lucide-react';
+import { Download, Upload, FileText, Database, AlertTriangle, Info, Printer } from 'lucide-react';
 
 interface ImportExportMenuProps {
   onExportCsv?: () => void;
-  onImportCsv?: () => void;
+  onImportCsv?: (data: string) => void;
   onExportJson?: () => void;
-  onImportJson?: () => void;
+  onImportJson?: (data: string) => void;
   onExportSql?: () => void;
-  onImportSql?: () => void;
+  onImportSql?: (data: string) => void;
   onPrint?: () => void;
   title: string;
   description: string;
@@ -75,24 +75,17 @@ export const ImportExportMenu: React.FC<ImportExportMenuProps> = ({
 
     setIsProcessing(true);
     try {
-      let success = false;
-
       if (type === 'csv' && onImportCsv) {
-        await onImportCsv();
-        success = true;
+        await onImportCsv(importData);
       } else if (type === 'json' && onImportJson) {
-        await onImportJson();
-        success = true;
+        await onImportJson(importData);
       } else if (type === 'sql' && onImportSql) {
-        await onImportSql();
-        success = true;
+        await onImportSql(importData);
       }
 
-      if (success) {
-        setActiveModal(null);
-        setImportData('');
-        setIsOpen(false);
-      }
+      setActiveModal(null);
+      setImportData('');
+      setIsOpen(false);
     } catch (error) {
       console.error(`Error importing ${type}:`, error);
       addToast(`Failed to import ${type.toUpperCase()} data`, 'error');
@@ -182,7 +175,7 @@ export const ImportExportMenu: React.FC<ImportExportMenuProps> = ({
                     }}
                     className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
                   >
-                    <Download size={16} className="mr-2 text-gray-600" />
+                    <Printer size={16} className="mr-2 text-gray-600" />
                     Print Report
                   </button>
                 )}
@@ -190,38 +183,40 @@ export const ImportExportMenu: React.FC<ImportExportMenuProps> = ({
             </div>
 
             {/* Import Section */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2 px-2">Import Data</h4>
-              <div className="space-y-1">
-                {onImportCsv && (
-                  <button
-                    onClick={() => openImportModal('csv')}
-                    className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-                  >
-                    <Upload size={16} className="mr-2 text-green-600" />
-                    Import CSV
-                  </button>
-                )}
-                {onImportJson && (
-                  <button
-                    onClick={() => openImportModal('json')}
-                    className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-                  >
-                    <Upload size={16} className="mr-2 text-blue-600" />
-                    Import JSON
-                  </button>
-                )}
-                {onImportSql && (
-                  <button
-                    onClick={() => openImportModal('sql')}
-                    className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-                  >
-                    <Upload size={16} className="mr-2 text-purple-600" />
-                    Import SQL
-                  </button>
-                )}
+            {(onImportCsv || onImportJson || onImportSql) && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2 px-2">Import Data</h4>
+                <div className="space-y-1">
+                  {onImportCsv && (
+                    <button
+                      onClick={() => openImportModal('csv')}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                    >
+                      <Upload size={16} className="mr-2 text-green-600" />
+                      Import CSV
+                    </button>
+                  )}
+                  {onImportJson && (
+                    <button
+                      onClick={() => openImportModal('json')}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                    >
+                      <Upload size={16} className="mr-2 text-blue-600" />
+                      Import JSON
+                    </button>
+                  )}
+                  {onImportSql && (
+                    <button
+                      onClick={() => openImportModal('sql')}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                    >
+                      <Upload size={16} className="mr-2 text-purple-600" />
+                      Import SQL
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -255,7 +250,7 @@ export const ImportExportMenu: React.FC<ImportExportMenuProps> = ({
                         <h3 className="text-sm font-medium text-blue-800">Version Compatibility</h3>
                         <p className="text-sm text-blue-700 mt-1">
                           This import function supports both current format (v2.0) and legacy format (v1.0) JSON files.
-                          The system will automatically detect and convert v1.0 data structures.
+                          The system will automatically detect and convert v1.0 localStorage-based data structures.
                         </p>
                       </div>
                     </div>
@@ -269,6 +264,7 @@ export const ImportExportMenu: React.FC<ImportExportMenuProps> = ({
                       <h3 className="text-sm font-medium text-amber-800">Important Warning</h3>
                       <p className="text-sm text-amber-700 mt-1">
                         Importing data will replace existing records. Make sure to export your current data first if you want to keep it.
+                        This action cannot be undone.
                       </p>
                     </div>
                   </div>
@@ -286,6 +282,7 @@ export const ImportExportMenu: React.FC<ImportExportMenuProps> = ({
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Select a {activeModal.toUpperCase()} file to import
+                    {activeModal === 'json' && ' (supports v1.0 and v2.0 formats)'}
                   </p>
                 </div>
 
