@@ -30,7 +30,12 @@ export const importDbFromJson = async (jsonData: string): Promise<{ success: boo
   try {
     const data = JSON.parse(jsonData);
     
-    // Check if it's v1.0 format (localStorage-based)
+    // Check if it's v1.0 format (columns/values structure)
+    if (data.employees && data.employees.columns && data.employees.values) {
+      return await importV1ColumnsData(data);
+    }
+    
+    // Check if it's v1.0 format (direct array without version)
     if (data.employees && Array.isArray(data.employees) && !data.version) {
       return await importV1Data(data);
     }
@@ -87,10 +92,246 @@ export const importDbFromJson = async (jsonData: string): Promise<{ success: boo
   }
 };
 
-// Import v1.0 data (localStorage format)
+// Import v1.0 data with columns/values structure
+const importV1ColumnsData = async (v1Data: any): Promise<{ success: boolean; message: string }> => {
+  try {
+    console.log('Importing v1.0 data format (columns/values structure)...');
+    
+    // Clear existing data
+    await supabase.from('attendance').delete().neq('id', 0);
+    await supabase.from('employees').delete().neq('id', '');
+    await supabase.from('settings').delete().neq('id', 0);
+
+    let employeeCount = 0;
+    let attendanceCount = 0;
+
+    // Convert and import employees
+    if (v1Data.employees && v1Data.employees.columns && v1Data.employees.values) {
+      const columns = v1Data.employees.columns;
+      const convertedEmployees = v1Data.employees.values.map((values: any[]) => {
+        const employee: any = {};
+        
+        columns.forEach((column: string, index: number) => {
+          const value = values[index];
+          
+          switch (column.toLowerCase()) {
+            case 'id':
+              employee.id = value || `EMP${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`;
+              break;
+            case 'name':
+              employee.name = value;
+              break;
+            case 'department':
+              employee.department = value || null;
+              break;
+            case 'fathername':
+              employee.father_name = value || null;
+              break;
+            case 'dob':
+              employee.dob = value || null;
+              break;
+            case 'cnic':
+              employee.cnic = value || null;
+              break;
+            case 'address':
+              employee.address = value ? value.replace(/\n/g, ' ').trim() : null;
+              break;
+            case 'phone1':
+              employee.phone1 = value || null;
+              break;
+            case 'phone2':
+              employee.phone2 = value || null;
+              break;
+            case 'education':
+              employee.education = value || null;
+              break;
+            case 'shift':
+              employee.shift = value || 'morning';
+              break;
+            case 'weekends':
+              try {
+                employee.weekends = typeof value === 'string' ? JSON.parse(value) : (value || [0, 6]);
+              } catch (e) {
+                employee.weekends = [0, 6];
+              }
+              break;
+          }
+        });
+
+        // Set defaults
+        employee.shift = employee.shift || 'morning';
+        employee.weekends = employee.weekends || [0, 6];
+        employee.created_at = new Date().toISOString();
+        employee.updated_at = new Date().toISOString();
+
+        return employee;
+      }).filter((emp: any) => emp.name); // Only include employees with names
+
+      if (convertedEmployees.length > 0) {
+        const { error: employeesError } = await supabase
+          .from('employees')
+          .insert(convertedEmployees);
+        if (employeesError) {
+          console.error('Error inserting employees:', employeesError);
+          throw employeesError;
+        }
+        employeeCount = convertedEmployees.length;
+      }
+    }
+
+    // Convert and import attendance
+    if (v1Data.attendance && v1Data.attendance.columns && v1Data.attendance.values) {
+      const columns = v1Data.attendance.columns;
+      const convertedAttendance = v1Data.attendance.values.map((values: any[]) => {
+        const attendance: any = {};
+        
+        columns.forEach((column: string, index: number) => {
+          const value = values[index];
+          
+          switch (column.toLowerCase()) {
+            case 'employeeid':
+              attendance.employee_id = value;
+              break;
+            case 'date':
+              attendance.date = value;
+              break;
+            case 'present':
+              attendance.present = value === 1 || value === true || value === 'true';
+              break;
+            case 'timein':
+              attendance.time_in = value || null;
+              break;
+            case 'timeout':
+              attendance.time_out = value || null;
+              break;
+            case 'shift':
+              attendance.shift = value || 'morning';
+              break;
+            case 'hours':
+              attendance.hours = parseFloat(value) || 0;
+              break;
+          }
+        });
+
+        // Calculate overtime hours (hours > 8)
+        const totalHours = attendance.hours || 0;
+        if (totalHours > 8) {
+          attendance.overtime_hours = totalHours - 8;
+          attendance.hours = 8; // Cap regular hours at 8
+        } else {
+          attendance.overtime_hours = 0;
+        }
+
+        attendance.created_at = new Date().toISOString();
+        attendance.updated_at = new Date().toISOString();
+
+        return attendance;
+      }).filter((att: any) => att.employee_id && att.date); // Only include records with required fields
+
+      if (convertedAttendance.length > 0) {
+        // Insert in batches to avoid timeout
+        const batchSize = 100;
+        for (let i = 0; i < convertedAttendance.length; i += batchSize) {
+          const batch = convertedAttendance.slice(i, i + batchSize);
+          const { error: attendanceError } = await supabase
+            .from('attendance')
+            .insert(batch);
+          if (attendanceError) {
+            console.error('Error inserting attendance batch:', attendanceError);
+            throw attendanceError;
+          }
+        }
+        attendanceCount = convertedAttendance.length;
+      }
+    }
+
+    // Convert and import settings
+    const defaultSettings = [];
+    
+    if (v1Data.settings && v1Data.settings.columns && v1Data.settings.values) {
+      const columns = v1Data.settings.columns;
+      v1Data.settings.values.forEach((values: any[]) => {
+        const setting: any = {};
+        columns.forEach((column: string, index: number) => {
+          setting[column] = values[index];
+        });
+        
+        if (setting.key && setting.value) {
+          try {
+            const parsedValue = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
+            defaultSettings.push({
+              key: setting.key,
+              value: parsedValue,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          } catch (e) {
+            // If parsing fails, use the raw value
+            defaultSettings.push({
+              key: setting.key,
+              value: setting.value,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          }
+        }
+      });
+    }
+
+    // Add default settings if none provided
+    if (defaultSettings.length === 0) {
+      defaultSettings.push(
+        { 
+          key: 'weekends', 
+          value: [0, 6],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        { 
+          key: 'holidays', 
+          value: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        { 
+          key: 'shifts', 
+          value: {
+            morning: { start: '09:00', end: '17:00' },
+            night: { start: '21:00', end: '05:00' }
+          },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      );
+    }
+
+    if (defaultSettings.length > 0) {
+      const { error: settingsError } = await supabase
+        .from('settings')
+        .insert(defaultSettings);
+      if (settingsError) {
+        console.error('Error inserting settings:', settingsError);
+        throw settingsError;
+      }
+    }
+
+    return {
+      success: true,
+      message: `Successfully migrated v1.0 data: ${employeeCount} employees and ${attendanceCount} attendance records.`
+    };
+  } catch (error) {
+    console.error('Error importing v1.0 columns/values data:', error);
+    return {
+      success: false,
+      message: 'Failed to import v1.0 data. Please check the file format and try again.'
+    };
+  }
+};
+
+// Import v1.0 data (direct array format)
 const importV1Data = async (v1Data: any): Promise<{ success: boolean; message: string }> => {
   try {
-    console.log('Importing v1.0 data format...');
+    console.log('Importing v1.0 data format (direct array)...');
     
     // Clear existing data
     await supabase.from('attendance').delete().neq('id', 0);
