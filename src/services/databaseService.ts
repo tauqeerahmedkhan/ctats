@@ -30,6 +30,12 @@ export const importDbFromJson = async (jsonData: string): Promise<{ success: boo
   try {
     const data = JSON.parse(jsonData);
     
+    // Check if it's v1.0 format (localStorage-based)
+    if (data.employees && Array.isArray(data.employees) && !data.version) {
+      return await importV1Data(data);
+    }
+    
+    // Handle v2.0 format
     if (!data.employees || !data.attendance || !data.settings) {
       return { 
         success: false, 
@@ -77,6 +83,104 @@ export const importDbFromJson = async (jsonData: string): Promise<{ success: boo
     return { 
       success: false, 
       message: 'Failed to import data. Please check the file format and try again.' 
+    };
+  }
+};
+
+// Import v1.0 data (localStorage format)
+const importV1Data = async (v1Data: any): Promise<{ success: boolean; message: string }> => {
+  try {
+    console.log('Importing v1.0 data format...');
+    
+    // Clear existing data
+    await supabase.from('attendance').delete().neq('id', 0);
+    await supabase.from('employees').delete().neq('id', '');
+    await supabase.from('settings').delete().neq('id', 0);
+
+    let employeeCount = 0;
+    let attendanceCount = 0;
+
+    // Convert and import employees
+    if (v1Data.employees && Array.isArray(v1Data.employees)) {
+      const convertedEmployees = v1Data.employees.map((emp: any) => ({
+        id: emp.id || `EMP${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`,
+        name: emp.name,
+        department: emp.department || null,
+        father_name: emp.fatherName || null,
+        dob: emp.dob || null,
+        cnic: emp.cnic || null,
+        address: emp.address || null,
+        phone1: emp.phone1 || null,
+        phone2: emp.phone2 || null,
+        education: emp.education || null,
+        shift: emp.shift || 'morning',
+        weekends: emp.weekends || [0, 6],
+        created_at: emp.createdAt || new Date().toISOString(),
+        updated_at: emp.updatedAt || new Date().toISOString(),
+      }));
+
+      if (convertedEmployees.length > 0) {
+        const { error: employeesError } = await supabase
+          .from('employees')
+          .insert(convertedEmployees);
+        if (employeesError) throw employeesError;
+        employeeCount = convertedEmployees.length;
+      }
+    }
+
+    // Convert and import attendance
+    if (v1Data.attendance && Array.isArray(v1Data.attendance)) {
+      const convertedAttendance = v1Data.attendance.map((att: any) => ({
+        employee_id: att.employeeId,
+        date: att.date,
+        present: att.present || false,
+        time_in: att.timeIn || null,
+        time_out: att.timeOut || null,
+        shift: att.shift || 'morning',
+        hours: att.hours || 0,
+        overtime_hours: att.overtimeHours || 0,
+        created_at: att.createdAt || new Date().toISOString(),
+        updated_at: att.updatedAt || new Date().toISOString(),
+      }));
+
+      if (convertedAttendance.length > 0) {
+        // Insert in batches to avoid timeout
+        const batchSize = 100;
+        for (let i = 0; i < convertedAttendance.length; i += batchSize) {
+          const batch = convertedAttendance.slice(i, i + batchSize);
+          const { error: attendanceError } = await supabase
+            .from('attendance')
+            .insert(batch);
+          if (attendanceError) throw attendanceError;
+        }
+        attendanceCount = convertedAttendance.length;
+      }
+    }
+
+    // Convert and import settings
+    const defaultSettings = [
+      { key: 'weekends', value: v1Data.settings?.weekends || [0, 6] },
+      { key: 'holidays', value: v1Data.settings?.holidays || [] },
+      { key: 'shifts', value: v1Data.settings?.shifts || {
+        morning: { start: '09:00', end: '17:00' },
+        night: { start: '21:00', end: '05:00' }
+      }}
+    ];
+
+    const { error: settingsError } = await supabase
+      .from('settings')
+      .insert(defaultSettings);
+    if (settingsError) throw settingsError;
+
+    return {
+      success: true,
+      message: `Successfully migrated v1.0 data: ${employeeCount} employees and ${attendanceCount} attendance records.`
+    };
+  } catch (error) {
+    console.error('Error importing v1.0 data:', error);
+    return {
+      success: false,
+      message: 'Failed to import v1.0 data. Please check the file format and try again.'
     };
   }
 };

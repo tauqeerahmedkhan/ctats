@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { Card } from '../common/Card';
-import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
+import { ImportExportMenu } from '../common/ImportExportMenu';
 import { MonthSelector } from '../attendance/MonthSelector';
 import { AttendanceSummary } from './AttendanceSummary';
 import { PunctualityReport } from './PunctualityReport';
@@ -10,7 +10,7 @@ import { EmployeeAnalytics } from './EmployeeAnalytics';
 import { getAttendanceSummary } from '../../services/attendanceService';
 import { getAllEmployees } from '../../services/employeeService';
 import { Employee } from '../../types/Employee';
-import { BarChart3, Download, Printer, Clock, Users, TrendingUp, User } from 'lucide-react';
+import { BarChart3, Clock, User } from 'lucide-react';
 
 export const ReportsView: React.FC = () => {
   const { addToast } = useToast();
@@ -170,22 +170,13 @@ export const ReportsView: React.FC = () => {
         </div>
         
         <div className="flex flex-wrap gap-3">
-          <Button 
-            variant="outline" 
-            onClick={handleExportCsv}
-            icon={<Download size={18} />}
+          <ImportExportMenu
+            title="Report Data Management"
+            description="Export reports and print analytics"
+            onExportCsv={handleExportCsv}
+            onPrint={handlePrint}
             disabled={attendanceSummary.length === 0 && activeTab !== 'analytics'}
-          >
-            Export CSV
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handlePrint}
-            icon={<Printer size={18} />}
-            disabled={attendanceSummary.length === 0 && activeTab !== 'analytics'}
-          >
-            Print Report
-          </Button>
+          />
         </div>
       </div>
       

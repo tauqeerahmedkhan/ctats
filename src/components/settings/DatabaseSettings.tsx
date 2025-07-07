@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { Button } from '../common/Button';
+import { ImportExportMenu } from '../common/ImportExportMenu';
 import { exportDbToJson, importDbFromJson, exportDbToSql, importDbFromSql, generateSampleData } from '../../services/databaseService';
-import { Database, Download, Upload, RefreshCw, AlertTriangle, FileSpreadsheet, FileText, Code } from 'lucide-react';
+import { Database, RefreshCw, FileSpreadsheet } from 'lucide-react';
 
 export const DatabaseSettings: React.FC = () => {
   const { addToast } = useToast();
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isSqlImportModalOpen, setIsSqlImportModalOpen] = useState(false);
-  const [importData, setImportData] = useState('');
-  const [sqlImportData, setSqlImportData] = useState('');
-  const [isImporting, setIsImporting] = useState(false);
-  const [isSqlImporting, setIsSqlImporting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   
   const handleExportJson = async () => {
@@ -57,31 +52,12 @@ export const DatabaseSettings: React.FC = () => {
     }
   };
 
-  const handleImportDatabase = () => {
-    setIsImportModalOpen(true);
-    setImportData('');
-  };
-
-  const handleImportSql = () => {
-    setIsSqlImportModalOpen(true);
-    setSqlImportData('');
-  };
-
-  const processImportDatabase = async () => {
-    if (!importData.trim()) {
-      addToast('No data to import', 'warning');
-      return;
-    }
-
-    setIsImporting(true);
-
+  const handleImportJson = async (jsonData: string) => {
     try {
-      const result = await importDbFromJson(importData);
+      const result = await importDbFromJson(jsonData);
       
       if (result.success) {
         addToast(result.message, 'success');
-        setIsImportModalOpen(false);
-        setImportData('');
         // Refresh the page to reload all data
         window.location.reload();
       } else {
@@ -90,26 +66,15 @@ export const DatabaseSettings: React.FC = () => {
     } catch (error) {
       console.error('Error importing database:', error);
       addToast('Failed to import database', 'error');
-    } finally {
-      setIsImporting(false);
     }
   };
 
-  const processImportSql = async () => {
-    if (!sqlImportData.trim()) {
-      addToast('No SQL data to import', 'warning');
-      return;
-    }
-
-    setIsSqlImporting(true);
-
+  const handleImportSql = async (sqlData: string) => {
     try {
-      const result = await importDbFromSql(sqlImportData);
+      const result = await importDbFromSql(sqlData);
       
       if (result.success) {
         addToast(result.message, 'success');
-        setIsSqlImportModalOpen(false);
-        setSqlImportData('');
         // Refresh the page to reload all data
         window.location.reload();
       } else {
@@ -118,49 +83,7 @@ export const DatabaseSettings: React.FC = () => {
     } catch (error) {
       console.error('Error importing SQL:', error);
       addToast('Failed to import SQL data', 'error');
-    } finally {
-      setIsSqlImporting(false);
     }
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-      addToast('Please select a valid JSON backup file', 'error');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      setImportData(content);
-    };
-    reader.onerror = () => {
-      addToast('Failed to read file', 'error');
-    };
-    reader.readAsText(file);
-  };
-
-  const handleSqlFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.name.endsWith('.sql')) {
-      addToast('Please select a valid SQL file', 'error');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      setSqlImportData(content);
-    };
-    reader.onerror = () => {
-      addToast('Failed to read SQL file', 'error');
-    };
-    reader.readAsText(file);
   };
 
   const handleGenerateSampleData = async () => {
@@ -185,6 +108,31 @@ export const DatabaseSettings: React.FC = () => {
       setIsGenerating(false);
     }
   };
+
+  const getJsonTemplate = () => {
+    return JSON.stringify({
+      employees: [],
+      attendance: [],
+      settings: [],
+      exportDate: new Date().toISOString(),
+      version: "2.0"
+    }, null, 2);
+  };
+
+  const getSqlTemplate = () => {
+    return `-- Employee Attendance System Database Import
+-- Paste your SQL INSERT statements here
+
+INSERT INTO employees (id, name, department, shift, weekends) VALUES
+('EMP0001', 'John Doe', 'IT', 'morning', '[0,6]');
+
+INSERT INTO attendance (employee_id, date, present, time_in, time_out, shift, hours, overtime_hours) VALUES
+('EMP0001', '2025-01-01', true, '09:00', '17:00', 'morning', 8, 0);
+
+INSERT INTO settings (key, value) VALUES
+('weekends', '[0,6]'),
+('holidays', '[]');`;
+  };
   
   return (
     <div>
@@ -195,77 +143,25 @@ export const DatabaseSettings: React.FC = () => {
         All data is securely stored in Supabase cloud database.
       </p>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="border rounded-lg p-4 bg-white">
           <div className="flex items-center mb-3">
             <Database className="text-blue-500 mr-2" size={20} />
-            <h3 className="font-medium text-gray-800">Export JSON Backup</h3>
+            <h3 className="font-medium text-gray-800">Data Management</h3>
           </div>
           <p className="text-gray-600 text-sm mb-4">
-            Export your database to a JSON file for backup purposes.
+            Import and export your complete database in multiple formats including legacy v1.0 support.
           </p>
-          <Button
-            variant="primary"
-            onClick={handleExportJson}
-            icon={<Download size={18} />}
-            fullWidth
-          >
-            Export JSON
-          </Button>
-        </div>
-
-        <div className="border rounded-lg p-4 bg-white">
-          <div className="flex items-center mb-3">
-            <Code className="text-purple-500 mr-2" size={20} />
-            <h3 className="font-medium text-gray-800">Export SQL Backup</h3>
-          </div>
-          <p className="text-gray-600 text-sm mb-4">
-            Export your database as SQL INSERT statements.
-          </p>
-          <Button
-            variant="secondary"
-            onClick={handleExportSql}
-            icon={<Download size={18} />}
-            fullWidth
-          >
-            Export SQL
-          </Button>
-        </div>
-        
-        <div className="border rounded-lg p-4 bg-white">
-          <div className="flex items-center mb-3">
-            <Upload className="text-green-500 mr-2" size={20} />
-            <h3 className="font-medium text-gray-800">Import JSON Database</h3>
-          </div>
-          <p className="text-gray-600 text-sm mb-4">
-            Import a previously exported JSON backup file to restore your data.
-          </p>
-          <Button
-            variant="outline"
-            onClick={handleImportDatabase}
-            icon={<Upload size={18} />}
-            fullWidth
-          >
-            Import JSON
-          </Button>
-        </div>
-
-        <div className="border rounded-lg p-4 bg-white">
-          <div className="flex items-center mb-3">
-            <FileText className="text-orange-500 mr-2" size={20} />
-            <h3 className="font-medium text-gray-800">Import SQL Database</h3>
-          </div>
-          <p className="text-gray-600 text-sm mb-4">
-            Import data from SQL INSERT statements.
-          </p>
-          <Button
-            variant="outline"
-            onClick={handleImportSql}
-            icon={<Upload size={18} />}
-            fullWidth
-          >
-            Import SQL
-          </Button>
+          <ImportExportMenu
+            title="Complete Database Management"
+            description="Full database backup and restore with v1.0 compatibility"
+            onExportJson={handleExportJson}
+            onImportJson={handleImportJson}
+            onExportSql={handleExportSql}
+            onImportSql={handleImportSql}
+            jsonTemplate={getJsonTemplate()}
+            sqlTemplate={getSqlTemplate()}
+          />
         </div>
 
         <div className="border rounded-lg p-4 bg-white">
@@ -279,7 +175,7 @@ export const DatabaseSettings: React.FC = () => {
           <Button
             variant="outline"
             onClick={handleGenerateSampleData}
-            icon={<FileSpreadsheet size={18} />}
+            icon={<RefreshCw size={18} />}
             fullWidth
             isLoading={isGenerating}
           >
@@ -289,184 +185,23 @@ export const DatabaseSettings: React.FC = () => {
       </div>
       
       <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
-        <h3 className="text-sm font-medium text-blue-800 mb-2">About Supabase Storage</h3>
-        <p className="text-sm text-blue-700">
-          This application uses Supabase as the database backend, providing secure cloud storage
-          with real-time capabilities. Your data is automatically backed up and synchronized
-          across all your devices. Regular exports are still recommended for additional security.
-        </p>
+        <h3 className="text-sm font-medium text-blue-800 mb-2">About Supabase Storage & Legacy Support</h3>
+        <div className="text-sm text-blue-700 space-y-2">
+          <p>
+            This application uses Supabase as the database backend, providing secure cloud storage
+            with real-time capabilities. Your data is automatically backed up and synchronized
+            across all your devices.
+          </p>
+          <p>
+            <strong>Legacy v1.0 Support:</strong> The import function automatically detects and converts
+            data from the previous localStorage-based version (v1.0) to the new Supabase format.
+            Simply import your old JSON backup and the system will handle the migration.
+          </p>
+          <p>
+            Regular exports are recommended for additional security and data portability.
+          </p>
+        </div>
       </div>
-
-      {/* Import JSON Database Modal */}
-      {isImportModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Import JSON Database Backup
-                </h2>
-                <button
-                  onClick={() => setIsImportModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="flex items-start">
-                    <AlertTriangle className="text-amber-500 mr-2 mt-0.5" size={20} />
-                    <div>
-                      <h3 className="text-sm font-medium text-amber-800">Important Warning</h3>
-                      <p className="text-sm text-amber-700 mt-1">
-                        Importing a database backup will completely replace all existing data including employees, 
-                        attendance records, and settings. This action cannot be undone. Make sure to export your 
-                        current data first if you want to keep it.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload JSON Backup File
-                  </label>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Select a JSON backup file exported from this application
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Or Paste JSON Data
-                  </label>
-                  <textarea
-                    value={importData}
-                    onChange={(e) => setImportData(e.target.value)}
-                    className="w-full h-64 p-4 font-mono text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Paste your JSON backup data here..."
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsImportModalOpen(false);
-                      setImportData('');
-                    }}
-                    disabled={isImporting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="primary" 
-                    onClick={processImportDatabase}
-                    isLoading={isImporting}
-                    disabled={!importData.trim()}
-                    icon={<Upload size={18} />}
-                  >
-                    {isImporting ? 'Importing...' : 'Import Database'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Import SQL Database Modal */}
-      {isSqlImportModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Import SQL Database
-                </h2>
-                <button
-                  onClick={() => setIsSqlImportModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="flex items-start">
-                    <AlertTriangle className="text-amber-500 mr-2 mt-0.5" size={20} />
-                    <div>
-                      <h3 className="text-sm font-medium text-amber-800">Important Warning</h3>
-                      <p className="text-sm text-amber-700 mt-1">
-                        Importing SQL data will completely replace all existing data. This action cannot be undone. 
-                        Make sure to export your current data first if you want to keep it.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload SQL File
-                  </label>
-                  <input
-                    type="file"
-                    accept=".sql"
-                    onChange={handleSqlFileUpload}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Select an SQL file with INSERT statements
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Or Paste SQL Data
-                  </label>
-                  <textarea
-                    value={sqlImportData}
-                    onChange={(e) => setSqlImportData(e.target.value)}
-                    className="w-full h-64 p-4 font-mono text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Paste your SQL INSERT statements here..."
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsSqlImportModalOpen(false);
-                      setSqlImportData('');
-                    }}
-                    disabled={isSqlImporting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="primary" 
-                    onClick={processImportSql}
-                    isLoading={isSqlImporting}
-                    disabled={!sqlImportData.trim()}
-                    icon={<Upload size={18} />}
-                  >
-                    {isSqlImporting ? 'Importing...' : 'Import SQL'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

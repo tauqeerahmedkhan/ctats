@@ -3,6 +3,7 @@ import { useToast } from '../../context/ToastContext';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
+import { ImportExportMenu } from '../common/ImportExportMenu';
 import { AttendanceCalendar } from './AttendanceCalendar';
 import { MonthSelector } from './MonthSelector';
 import { getAttendanceByMonth, importAttendanceFromCsv, exportAttendanceToCsv, getAttendanceTemplate } from '../../services/attendanceService';
@@ -11,7 +12,7 @@ import { getSettings } from '../../services/settingsService';
 import { Employee } from '../../types/Employee';
 import { AttendanceRecord } from '../../types/Attendance';
 import { Settings } from '../../types/Settings';
-import { Calendar, Download, Save, UsersRound, Upload } from 'lucide-react';
+import { Save, UsersRound } from 'lucide-react';
 
 export const AttendanceView: React.FC = () => {
   const { addToast } = useToast();
@@ -19,8 +20,6 @@ export const AttendanceView: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [importData, setImportData] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
   // Current month and year
@@ -62,23 +61,11 @@ export const AttendanceView: React.FC = () => {
     addToast('Attendance records saved successfully', 'success');
   };
 
-  const handleImportAttendance = () => {
-    setIsImportOpen(true);
-    setImportData(getAttendanceTemplate());
-  };
-
-  const processImportAttendance = async () => {
-    if (!importData.trim()) {
-      addToast('No data to import', 'warning');
-      return;
-    }
-
+  const handleImportAttendance = async (csvData: string) => {
     try {
-      const result = await importAttendanceFromCsv(importData);
+      const result = await importAttendanceFromCsv(csvData);
       if (result.success) {
         addToast(`Successfully imported ${result.count} attendance records`, 'success');
-        setIsImportOpen(false);
-        setImportData('');
         loadData();
       } else {
         addToast('Failed to import attendance records', 'error');
@@ -140,20 +127,14 @@ export const AttendanceView: React.FC = () => {
           >
             Save Attendance
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleExportCsv}
-            icon={<Download size={18} />}
-          >
-            Export CSV
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleImportAttendance}
-            icon={<Upload size={18} />}
-          >
-            Import Attendance
-          </Button>
+          <ImportExportMenu
+            title="Attendance Data Management"
+            description="Import and export attendance records"
+            onExportCsv={handleExportCsv}
+            onImportCsv={handleImportAttendance}
+            csvTemplate={getAttendanceTemplate()}
+            disabled={attendanceRecords.length === 0}
+          />
         </div>
       </div>
       
@@ -193,52 +174,12 @@ export const AttendanceView: React.FC = () => {
             />
           ) : (
             <EmptyState
-              icon={<Calendar size={40} />}
+              icon={<UsersRound size={40} />}
               title="Loading calendar..."
               description="Please wait while we load the attendance calendar"
             />
           )}
         </Card>
-      )}
-
-      {isImportOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Import Attendance Records
-              </h2>
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Paste your CSV data below. The first row should contain headers.
-                  You can use the template provided or clear it and paste your own data.
-                </p>
-                <textarea
-                  value={importData}
-                  onChange={(e) => setImportData(e.target.value)}
-                  className="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500"
-                />
-                <div className="flex justify-end gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsImportOpen(false);
-                      setImportData('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="primary" 
-                    onClick={processImportAttendance}
-                  >
-                    Import Records
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

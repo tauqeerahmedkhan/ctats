@@ -3,11 +3,12 @@ import { useToast } from '../../context/ToastContext';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
+import { ImportExportMenu } from '../common/ImportExportMenu';
 import { EmployeeList } from './EmployeeList';
 import { EmployeeForm } from './EmployeeForm';
 import { getAllEmployees, deleteEmployee, importEmployeesFromCsv, exportEmployeesToCsv, getEmployeeTemplate } from '../../services/employeeService';
 import { Employee } from '../../types/Employee';
-import { UserPlus, Upload, Download, UserX } from 'lucide-react';
+import { UserPlus, UserX } from 'lucide-react';
 
 export const EmployeeView: React.FC = () => {
   const { addToast } = useToast();
@@ -15,8 +16,6 @@ export const EmployeeView: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [importData, setImportData] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
   // Load employees when component mounts
@@ -99,24 +98,12 @@ export const EmployeeView: React.FC = () => {
     }
   };
   
-  const handleImportCsv = () => {
-    setIsImportOpen(true);
-    setImportData(getEmployeeTemplate());
-  };
-  
-  const processImportCsv = async () => {
-    if (!importData.trim()) {
-      addToast('No data to import', 'warning');
-      return;
-    }
-    
+  const handleImportCsv = async (csvData: string) => {
     try {
-      const result = await importEmployeesFromCsv(importData);
+      const result = await importEmployeesFromCsv(csvData);
       
       if (result.success) {
         addToast(`Successfully imported ${result.count} employees`, 'success');
-        setIsImportOpen(false);
-        setImportData('');
         loadEmployees();
       } else {
         addToast('Failed to import employees', 'error');
@@ -151,20 +138,14 @@ export const EmployeeView: React.FC = () => {
           >
             Add Employee
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleExportCsv}
-            icon={<Download size={18} />}
-          >
-            Export CSV
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleImportCsv}
-            icon={<Upload size={18} />}
-          >
-            Import CSV
-          </Button>
+          <ImportExportMenu
+            title="Employee Data Management"
+            description="Import and export employee information"
+            onExportCsv={handleExportCsv}
+            onImportCsv={handleImportCsv}
+            csvTemplate={getEmployeeTemplate()}
+            disabled={false}
+          />
         </div>
       </div>
       
@@ -203,46 +184,6 @@ export const EmployeeView: React.FC = () => {
                 employee={selectedEmployee} 
                 onClose={handleFormClose} 
               />
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {isImportOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Import Employees from CSV
-              </h2>
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Paste your CSV data below. The first row should contain headers.
-                  You can use the template provided or clear it and paste your own data.
-                </p>
-                <textarea
-                  value={importData}
-                  onChange={(e) => setImportData(e.target.value)}
-                  className="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500"
-                />
-                <div className="flex justify-end gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsImportOpen(false);
-                      setImportData('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="primary" 
-                    onClick={processImportCsv}
-                  >
-                    Import Employees
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
         </div>

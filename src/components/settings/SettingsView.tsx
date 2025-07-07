@@ -23,6 +23,37 @@ export const SettingsView: React.FC = () => {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  // Add default Friday holiday when settings are loaded
+  useEffect(() => {
+    if (settings && settings.holidays.length === 0) {
+      // Add default Friday holiday
+      const currentYear = new Date().getFullYear();
+      const defaultHolidays = [];
+      
+      // Add all Fridays of current year as holidays
+      for (let month = 0; month < 12; month++) {
+        const firstDay = new Date(currentYear, month, 1);
+        const lastDay = new Date(currentYear, month + 1, 0);
+        
+        for (let day = firstDay; day <= lastDay; day.setDate(day.getDate() + 1)) {
+          if (day.getDay() === 5) { // Friday
+            defaultHolidays.push({
+              date: day.toISOString().split('T')[0],
+              name: 'Friday Holiday'
+            });
+          }
+        }
+      }
+      
+      if (defaultHolidays.length > 0) {
+        setSettings({
+          ...settings,
+          holidays: defaultHolidays
+        });
+      }
+    }
+  }, [settings?.holidays?.length]);
   
   const loadSettings = async () => {
     setIsLoading(true);
