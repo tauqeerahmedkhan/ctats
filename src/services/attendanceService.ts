@@ -184,6 +184,11 @@ export const getAttendanceSummary = async (year: number, month: number): Promise
 
     if (attendanceError) throw attendanceError;
 
+    if (!attendanceData || attendanceData.length === 0) {
+      console.log('No attendance data found for the specified period');
+      return [];
+    }
+
     // Group by employee and calculate summary
     const employeeSummary = new Map();
 
@@ -202,6 +207,9 @@ export const getAttendanceSummary = async (year: number, month: number): Promise
           on_time_days: 0,
           late_days: 0,
           early_departures: 0,
+          avg_lateness_minutes: 0,
+          punctuality_percentage: 100,
+          hours_efficiency: 100,
         });
       }
 
@@ -240,7 +248,7 @@ export const getAttendanceSummary = async (year: number, month: number): Promise
       avg_hours_per_day: summary.present_days > 0 ? summary.total_hours / summary.present_days : 0,
       punctuality_percentage: summary.present_days > 0 ? (summary.on_time_days / summary.present_days) * 100 : 100,
       hours_efficiency: summary.present_days > 0 ? (summary.total_hours / (summary.present_days * 8)) * 100 : 0,
-      avg_lateness_minutes: 0, // Would need more complex calculation
+      avg_lateness_minutes: 0,
     }));
 
     return result;

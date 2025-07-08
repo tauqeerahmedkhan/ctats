@@ -60,18 +60,19 @@ export const AttendanceSummary: React.FC<AttendanceSummaryProps> = ({
   
   // Calculate punctuality metrics
   const calculatePunctualityMetrics = (item: any) => {
-    const expectedHoursPerDay = 8; // Standard 8-hour workday
-    const expectedTotalHours = item.presentDays * expectedHoursPerDay;
-    const actualHours = item.totalHours || 0;
+    const presentDays = item.present_days || 0;
+    const expectedHoursPerDay = 8;
+    const expectedTotalHours = presentDays * expectedHoursPerDay;
+    const actualHours = item.total_hours || 0;
     const hoursVariance = actualHours - expectedTotalHours;
-    const punctualityScore = expectedTotalHours > 0 ? Math.min(100, (actualHours / expectedTotalHours) * 100) : 0;
+    const punctualityScore = expectedTotalHours > 0 ? Math.min(100, (actualHours / expectedTotalHours) * 100) : 100;
     
     return {
       expectedHours: expectedTotalHours,
       actualHours,
       hoursVariance,
       punctualityScore: Math.round(punctualityScore),
-      avgHoursPerDay: item.presentDays > 0 ? (actualHours / item.presentDays).toFixed(1) : '0.0'
+      avgHoursPerDay: presentDays > 0 ? (actualHours / presentDays).toFixed(1) : '0.0'
     };
   };
 
@@ -178,8 +179,8 @@ export const AttendanceSummary: React.FC<AttendanceSummaryProps> = ({
           </thead>
           <tbody>
             {sortedData.map((item) => {
-              const presentDays = item.presentDays || 0;
-              const absentDays = item.absentDays || 0;
+              const presentDays = item.present_days || 0;
+              const absentDays = item.absent_days || 0;
               const totalDays = presentDays + absentDays;
               const attendancePercentage = totalDays > 0 
                 ? ((presentDays / totalDays) * 100).toFixed(1) 
@@ -189,10 +190,10 @@ export const AttendanceSummary: React.FC<AttendanceSummaryProps> = ({
               const punctualityBadge = getPunctualityBadge(metrics.punctualityScore);
               
               return (
-                <tr key={item.employeeId} className="border-b hover:bg-gray-50 print:hover:bg-white">
+                <tr key={item.employee_id} className="border-b hover:bg-gray-50 print:hover:bg-white">
                   <td className="py-3 px-4 print:py-2">
-                    <div className="font-medium text-gray-900">{item.employeeName}</div>
-                    <div className="text-xs text-gray-500 print:hidden">{item.employeeId}</div>
+                    <div className="font-medium text-gray-900">{item.employee_name}</div>
+                    <div className="text-xs text-gray-500 print:hidden">{item.employee_id}</div>
                   </td>
                   <td className="py-3 px-4 text-gray-700 print:py-2">
                     {item.department || 'N/A'}

@@ -80,6 +80,18 @@ export const EmployeeAnalytics: React.FC<EmployeeAnalyticsProps> = ({
         startDate = weekStart.toISOString().split('T')[0];
         endDate = weekEnd.toISOString().split('T')[0];
         break;
+      case 'lastMonth':
+        const lastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+        startDate = lastMonth.toISOString().split('T')[0];
+        endDate = lastMonthEnd.toISOString().split('T')[0];
+        break;
+      case 'last2Months':
+        const twoMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1);
+        const lastMonthEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+        startDate = twoMonthsAgo.toISOString().split('T')[0];
+        endDate = lastMonthEndDate.toISOString().split('T')[0];
+        break;
       case 'year':
         startDate = `${year}-01-01`;
         endDate = `${year}-12-31`;
@@ -183,6 +195,8 @@ export const EmployeeAnalytics: React.FC<EmployeeAnalyticsProps> = ({
             >
               <option value="week">This Week</option>
               <option value="month">This Month</option>
+              <option value="lastMonth">Last Month</option>
+              <option value="last2Months">Previous 2 Months</option>
               <option value="year">This Year</option>
               <option value="custom">Custom Range</option>
             </select>
