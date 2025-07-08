@@ -108,7 +108,7 @@ export const AnalyticsExplanation: React.FC = () => {
               </div>
               <div>
                 <p className="text-orange-700 font-medium">Determine Regular vs Overtime Hours</p>
-                <p className="text-orange-600 text-sm">If Total Hours > 8: Regular = 8, Overtime = Total - 8</p>
+                <p className="text-orange-600 text-sm">If Total Hours &gt; 8: Regular = 8, Overtime = Total - 8</p>
                 <p className="text-orange-600 text-sm">If Total Hours ≤ 8: Regular = Total, Overtime = 0</p>
               </div>
             </div>
