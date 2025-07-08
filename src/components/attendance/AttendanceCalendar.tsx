@@ -4,6 +4,7 @@ import { saveAttendanceRecord } from '../../services/attendanceService';
 import { Employee } from '../../types/Employee';
 import { AttendanceRecord } from '../../types/Attendance';
 import { Settings } from '../../types/Settings';
+import { formatTime } from '../../utils/dateUtils';
 import { Clock, Zap } from 'lucide-react';
 
 interface AttendanceCalendarProps {
@@ -271,11 +272,11 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
                           </div>
                           {record?.hours !== undefined && record.hours > 0 && (
                             <div className="text-xs text-gray-500 mt-1">
-                              {record.hours}h
+                              {formatTime(record.hours)}
                               {record.overtimeHours && record.overtimeHours > 0 && (
                                 <div className="flex items-center justify-center gap-1 text-orange-600">
                                   <Zap size={10} />
-                                  +{record.overtimeHours}h
+                                  +{formatTime(record.overtimeHours)}
                                 </div>
                               )}
                             </div>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
+import { EmployeeModal } from './EmployeeModal';
 import { Employee } from '../../types/Employee';
-import { Edit, Trash2, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { Edit, Trash2, Search, ChevronDown, ChevronUp, Eye, Printer, Download } from 'lucide-react';
 
 interface EmployeeListProps {
   employees: Employee[];
@@ -18,6 +19,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof Employee>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Filter employees by search term
   const filteredEmployees = employees.filter((employee) => {
@@ -68,8 +71,120 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
     );
   };
   
+  const handleViewEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsModalOpen(true);
+  };
+  
+  const handlePrintEmployee = (employee: Employee) => {
+    // Create a print-friendly version
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Employee Profile - ${employee.name}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+              .info-item { margin-bottom: 10px; }
+              .label { font-weight: bold; color: #333; }
+              .value { color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Employee Profile</h1>
+              <h2>${employee.name}</h2>
+              <p>Employee ID: ${employee.id}</p>
+            </div>
+            <div class="info-grid">
+              <div>
+                <div class="info-item">
+                  <span class="label">Department:</span>
+                  <span class="value">${employee.department || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Father's Name:</span>
+                  <span class="value">${employee.fatherName || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Date of Birth:</span>
+                  <span class="value">${employee.dob || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">CNIC:</span>
+                  <span class="value">${employee.cnic || 'N/A'}</span>
+                </div>
+              </div>
+              <div>
+                <div class="info-item">
+                  <span class="label">Phone 1:</span>
+                  <span class="value">${employee.phone1 || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Phone 2:</span>
+                  <span class="value">${employee.phone2 || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Education:</span>
+                  <span class="value">${employee.education || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Shift:</span>
+                  <span class="value">${employee.shift}</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 20px;">
+              <div class="info-item">
+                <span class="label">Address:</span>
+                <span class="value">${employee.address || 'N/A'}</span>
+              </div>
+            </div>
+            <div style="margin-top: 30px; text-align: center; color: #666; font-size: 12px;">
+              Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+  
+  const handleExportEmployee = (employee: Employee) => {
+    const csvContent = [
+      'Field,Value',
+      `Employee ID,${employee.id}`,
+      `Name,${employee.name}`,
+      `Department,${employee.department || ''}`,
+      `Father's Name,${employee.fatherName || ''}`,
+      `Date of Birth,${employee.dob || ''}`,
+      `CNIC,${employee.cnic || ''}`,
+      `Address,${employee.address || ''}`,
+      `Phone 1,${employee.phone1 || ''}`,
+      `Phone 2,${employee.phone2 || ''}`,
+      `Education,${employee.education || ''}`,
+      `Shift,${employee.shift}`,
+      `Weekends,${JSON.stringify(employee.weekends)}`
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `employee-${employee.id}-${employee.name.replace(/\s+/g, '-')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
   return (
-    <Card>
+    <>
+      <Card>
       <div className="mb-4">
         <div className="flex items-center border rounded-lg overflow-hidden">
           <div className="bg-gray-100 p-3 text-gray-500">
@@ -148,9 +263,20 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleViewEmployee(employee)}
+                      icon={<Eye size={16} />}
+                      aria-label={`View ${employee.name}`}
+                      title="View Details"
+                    >
+                      View
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onEdit(employee)}
                       icon={<Edit size={16} />}
                       aria-label={`Edit ${employee.name}`}
+                      title="Edit Employee"
                     >
                       Edit
                     </Button>
@@ -161,9 +287,39 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                       icon={<Trash2 size={16} className="text-red-500" />}
                       className="text-red-500"
                       aria-label={`Delete ${employee.name}`}
+                      title="Delete Employee"
                     >
                       Delete
                     </Button>
+                    <div className="relative group">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={<Download size={16} />}
+                        aria-label={`Export ${employee.name}`}
+                        title="Export/Print Options"
+                      >
+                        Export
+                      </Button>
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handlePrintEmployee(employee)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Printer size={16} className="mr-2" />
+                            Print Profile
+                          </button>
+                          <button
+                            onClick={() => handleExportEmployee(employee)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Download size={16} className="mr-2" />
+                            Export CSV
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -179,6 +335,24 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
           </tbody>
         </table>
       </div>
-    </Card>
+      </Card>
+      
+      {/* Employee Modal */}
+      {isModalOpen && selectedEmployee && (
+        <EmployeeModal
+          employee={selectedEmployee}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedEmployee(null);
+          }}
+          onEdit={() => {
+            setIsModalOpen(false);
+            onEdit(selectedEmployee);
+          }}
+          onPrint={() => handlePrintEmployee(selectedEmployee)}
+          onExport={() => handleExportEmployee(selectedEmployee)}
+        />
+      )}
+    </>
   );
 };
