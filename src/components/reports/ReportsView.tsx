@@ -7,17 +7,18 @@ import { MonthSelector } from '../attendance/MonthSelector';
 import { AttendanceSummary } from './AttendanceSummary';
 import { PunctualityReport } from './PunctualityReport';
 import { EmployeeAnalytics } from './EmployeeAnalytics';
+import { AnalyticsExplanation } from './AnalyticsExplanation';
 import { getAttendanceSummary } from '../../services/attendanceService';
 import { getAllEmployees } from '../../services/employeeService';
 import { Employee } from '../../types/Employee';
-import { BarChart3, Clock, User } from 'lucide-react';
+import { BarChart3, Clock, User, BookOpen } from 'lucide-react';
 
 export const ReportsView: React.FC = () => {
   const { addToast } = useToast();
   
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendanceSummary, setAttendanceSummary] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'summary' | 'punctuality' | 'analytics'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'punctuality' | 'analytics' | 'explanation'>('summary');
   const [isLoading, setIsLoading] = useState(true);
   
   // Current month and year
@@ -191,7 +192,7 @@ export const ReportsView: React.FC = () => {
       )}
 
       {/* Report Tabs */}
-      <div className="print:hidden">
+      <div className="print:hidden mb-6">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             <button
@@ -233,6 +234,19 @@ export const ReportsView: React.FC = () => {
                 Employee Analytics
               </div>
             </button>
+            <button
+              onClick={() => setActiveTab('explanation')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'explanation'
+                  ? 'border-navy-500 text-navy-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center">
+                <BookOpen size={18} className="mr-2" />
+                Analytics Guide
+              </div>
+            </button>
           </nav>
         </div>
       </div>
@@ -242,8 +256,9 @@ export const ReportsView: React.FC = () => {
           {activeTab === 'summary' && 'Attendance Summary Report'}
           {activeTab === 'punctuality' && 'Punctuality & Overtime Analysis Report'}
           {activeTab === 'analytics' && 'Employee Analytics Report'}
+          {activeTab === 'explanation' && 'Analytics & Calculations Guide'}
         </h1>
-        {activeTab !== 'analytics' && (
+        {activeTab !== 'analytics' && activeTab !== 'explanation' && (
           <p className="text-gray-600">
             {new Date(selectedYear, selectedMonth - 1).toLocaleDateString('en-US', {
               year: 'numeric',
@@ -255,6 +270,8 @@ export const ReportsView: React.FC = () => {
       
       {activeTab === 'analytics' ? (
         <EmployeeAnalytics month={selectedMonth} year={selectedYear} />
+      ) : activeTab === 'explanation' ? (
+        <AnalyticsExplanation />
       ) : attendanceSummary.length === 0 ? (
         <Card className="print:border-0 print:shadow-none">
           <EmptyState
