@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from '../common/Card';
-import { formatDistanceToNow } from '../../utils/dateUtils';
+import { formatDistanceToNow } from '../../utils/formatUtils';
 
 interface Activity {
   id: number;
