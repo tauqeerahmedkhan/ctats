@@ -4,7 +4,6 @@ import { saveAttendanceRecord } from '../../services/attendanceService';
 import { Employee } from '../../types/Employee';
 import { AttendanceRecord } from '../../types/Attendance';
 import { Settings } from '../../types/Settings';
-import { formatTime } from '../../utils/dateUtils';
 import { formatTime } from '../../utils/formatUtils';
 import { Clock, Zap } from 'lucide-react';
 
