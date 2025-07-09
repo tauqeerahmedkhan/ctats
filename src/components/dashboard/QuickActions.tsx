@@ -119,7 +119,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onNavigate }) => {
                   onClick={link.action}
                   className="flex flex-col items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
                 >
-                  <Icon className={`${link.color} mb-2 group-hover:scale-110 transition-transform`} size={20} />
+                  <Icon className={`${link.color} mb-2 group-hover:scale-110 transition-transform`} size={18} />
                   <div className="text-xs font-medium text-gray-800 text-center">{link.title}</div>
                   <div className="text-xs text-gray-500 text-center mt-1">{link.description}</div>
                 </button>

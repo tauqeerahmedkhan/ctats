@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
-import { EmployeeModal } from './EmployeeModal';
 import { Employee } from '../../types/Employee';
+import { EmployeeModal } from './EmployeeModal';
 import { Edit, Trash2, Search, ChevronDown, ChevronUp, Eye, Printer, Download } from 'lucide-react';
 
 interface EmployeeListProps {
@@ -242,6 +242,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                 <td className="py-3 px-4">
                   <div className="font-medium text-gray-900">{employee.name}</div>
                   <div className="text-xs text-gray-500">{employee.id}</div>
+                  <div className="text-xs text-gray-400 capitalize">{employee.shift} shift</div>
                 </td>
                 <td className="py-3 px-4 text-gray-700">
                   {employee.department || 'N/A'}

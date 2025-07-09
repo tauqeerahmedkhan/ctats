@@ -39,7 +39,9 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
     profilePic: null as File | null,
     cnicFront: null as File | null,
     cnicBack: null as File | null,
-    documents: [] as File[]
+    documents: [] as File[],
+    certificates: [] as File[],
+    contracts: [] as File[]
   });
   
   // Handle input change
@@ -157,17 +159,35 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <FileText className="inline mr-1" size={16} />
-            Additional Documents
+            Certificates & Qualifications
           </label>
           <FileUpload
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             multiple
-            onFileSelect={(file) => setFiles(prev => ({ 
-              ...prev, 
-              documents: [...prev.documents, file] 
+            onFileSelect={(file) => setFiles(prev => ({
+              ...prev,
+              certificates: [...prev.certificates, file]
             }))}
-            selectedFiles={files.documents}
-            placeholder="Upload certificates, contracts, etc."
+            selectedFiles={files.certificates}
+            placeholder="Upload educational certificates, training documents"
+          />
+        </div>
+        
+        {/* Contracts & Legal Documents */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <FileText className="inline mr-1" size={16} />
+            Contracts & Legal Documents
+          </label>
+          <FileUpload
+            accept=".pdf,.doc,.docx"
+            multiple
+            onFileSelect={(file) => setFiles(prev => ({
+              ...prev,
+              contracts: [...prev.contracts, file]
+            }))}
+            selectedFiles={files.contracts}
+            placeholder="Upload employment contracts, agreements"
           />
         </div>
       </div>
