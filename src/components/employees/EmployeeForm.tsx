@@ -109,7 +109,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
           Documents & Photos
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Profile Picture */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -154,7 +154,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
         </div>
         
         {/* Additional Documents */}
-        <div className="mt-6">
+        <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <FileText className="inline mr-1" size={16} />
             Additional Documents
