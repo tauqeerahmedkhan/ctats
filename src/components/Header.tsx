@@ -34,10 +34,26 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     }
   }, [isUserMenuOpen]);
 
+  // Generate avatar initials from email
+  const getAvatarInitials = (email: string) => {
+    return email.split('@')[0].substring(0, 2).toUpperCase();
+  };
+
+  // Generate avatar color based on email
+  const getAvatarColor = (email: string) => {
+    const colors = [
+      'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 
+      'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'
+    ];
+    const index = email.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   return (
     <header className="bg-navy-700 text-white shadow-md">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
+          {/* Left side - Hamburger menu and title */}
           <div className="flex items-center gap-3">
             <button 
               onClick={toggleSidebar}
@@ -52,22 +68,25 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             </div>
           </div>
           
+          {/* Right side - Date and user menu */}
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 text-gray-200">
               <Calendar size={20} />
               <span>{currentDate}</span>
             </div>
             
-            {/* User Dropdown */}
+            {/* User Avatar Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-navy-600 transition-colors"
+                className="flex items-center gap-2 p-1 rounded-lg hover:bg-navy-600 transition-colors"
               >
-                <div className="bg-teal-500 p-2 rounded-full">
-                  <User size={18} />
+                {/* Avatar */}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
+                  user?.email ? getAvatarColor(user.email) : 'bg-gray-500'
+                }`}>
+                  {user?.email ? getAvatarInitials(user.email) : <User size={16} />}
                 </div>
-                <span className="hidden sm:inline text-sm">{user?.email?.split('@')[0]}</span>
                 <ChevronDown size={16} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -75,8 +94,10 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
                   <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center gap-3">
-                      <div className="bg-navy-600 p-3 rounded-full">
-                        <User className="text-white" size={20} />
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                        user?.email ? getAvatarColor(user.email) : 'bg-gray-500'
+                      }`}>
+                        {user?.email ? getAvatarInitials(user.email) : <User size={20} />}
                       </div>
                       <div>
                         <p className="font-medium text-gray-800">{user?.email?.split('@')[0]}</p>

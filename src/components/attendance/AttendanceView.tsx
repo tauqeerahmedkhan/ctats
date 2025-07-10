@@ -52,6 +52,16 @@ export const AttendanceView: React.FC = () => {
     }
   };
   
+  // Optimized data refresh that doesn't cause full page reload
+  const handleDataChange = () => {
+    // Only reload attendance data, not the entire page
+    getAttendanceByMonth(selectedYear, selectedMonth).then(attendanceList => {
+      setAttendanceRecords(attendanceList);
+    }).catch(error => {
+      console.error('Error refreshing attendance data:', error);
+    });
+  };
+  
   const handleMonthChange = (month: number, year: number) => {
     setSelectedMonth(month);
     setSelectedYear(year);
@@ -170,7 +180,7 @@ export const AttendanceView: React.FC = () => {
               year={selectedYear}
               settings={settings}
               onSave={handleSaveAttendance}
-              onDataChange={loadData}
+              onDataChange={handleDataChange}
             />
           ) : (
             <EmptyState

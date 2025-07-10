@@ -60,6 +60,9 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
     date: string, 
     present: boolean
   ) => {
+    // Prevent default form submission behavior
+    event?.preventDefault();
+    
     const key = `${employeeId}-${date}`;
     const existingRecord = attendanceData[key] || {
       employeeId,
@@ -89,15 +92,23 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
       newRecord.overtimeHours = 0;
     }
     
-    const success = await saveAttendanceRecord(newRecord);
-    if (success) {
-      // Update local state
-      setAttendanceData(prev => ({
-        ...prev,
-        [key]: newRecord,
-      }));
-      onDataChange();
-    } else {
+    try {
+      const success = await saveAttendanceRecord(newRecord);
+      if (success) {
+        // Update local state immediately to prevent refresh
+        setAttendanceData(prev => ({
+          ...prev,
+          [key]: newRecord,
+        }));
+        // Call onDataChange without causing a full reload
+        if (onDataChange) {
+          onDataChange();
+        }
+      } else {
+        addToast('Failed to save attendance record', 'error');
+      }
+    } catch (error) {
+      console.error('Error saving attendance:', error);
       addToast('Failed to save attendance record', 'error');
     }
   };
@@ -109,6 +120,9 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
     field: 'timeIn' | 'timeOut', 
     value: string
   ) => {
+    // Prevent default form submission behavior
+    event?.preventDefault();
+    
     const key = `${employeeId}-${date}`;
     const existingRecord = attendanceData[key] || {
       employeeId,
@@ -123,15 +137,23 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
       shift: employee?.shift || 'morning',
     };
     
-    const success = await saveAttendanceRecord(newRecord);
-    if (success) {
-      // Update local state
-      setAttendanceData(prev => ({
-        ...prev,
-        [key]: newRecord,
-      }));
-      onDataChange();
-    } else {
+    try {
+      const success = await saveAttendanceRecord(newRecord);
+      if (success) {
+        // Update local state immediately
+        setAttendanceData(prev => ({
+          ...prev,
+          [key]: newRecord,
+        }));
+        // Call onDataChange without causing a full reload
+        if (onDataChange) {
+          onDataChange();
+        }
+      } else {
+        addToast('Failed to save time record', 'error');
+      }
+    } catch (error) {
+      console.error('Error saving time record:', error);
       addToast('Failed to save time record', 'error');
     }
   };
@@ -244,7 +266,10 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
                         <input
                           type="checkbox"
                           checked={record?.present || false}
-                          onChange={(e) => handleAttendanceChange(employee.id, dateStr, e.target.checked)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleAttendanceChange(employee.id, dateStr, e.target.checked);
+                          }}
                           className="h-5 w-5 rounded border-gray-300 text-navy-600 focus:ring-navy-500"
                           disabled={isWeekendDay || isHolidayDay}
                         />
@@ -257,7 +282,10 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
                             <input
                               type="time"
                               value={record?.timeIn || ''}
-                              onChange={(e) => handleTimeChange(employee.id, dateStr, 'timeIn', e.target.value)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleTimeChange(employee.id, dateStr, 'timeIn', e.target.value);
+                              }}
                               className="text-xs p-1 border rounded w-20"
                             />
                           </div>
@@ -266,7 +294,10 @@ export const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({
                             <input
                               type="time"
                               value={record?.timeOut || ''}
-                              onChange={(e) => handleTimeChange(employee.id, dateStr, 'timeOut', e.target.value)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleTimeChange(employee.id, dateStr, 'timeOut', e.target.value);
+                              }}
                               className="text-xs p-1 border rounded w-20"
                             />
                           </div>
