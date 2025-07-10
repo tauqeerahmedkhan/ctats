@@ -55,78 +55,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         {/* Content */}
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Picture & Documents */}
-            <div className="lg:col-span-1">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <ImageIcon className="mr-2 text-purple-600" size={20} />
-                Profile & Documents
-              </h3>
-              
-              {/* Profile Picture Placeholder */}
-              <div className="bg-gray-100 rounded-lg p-6 mb-4 text-center">
-                <div className="bg-gray-200 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                  <User className="text-gray-400" size={32} />
-                </div>
-                <p className="text-sm text-gray-600">Profile Picture</p>
-                <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
-              </div>
-
-              {/* CNIC Documents */}
-              <div className="space-y-3">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <CreditCard className="text-blue-600 mr-2" size={16} />
-                      <span className="text-sm font-medium">CNIC Front</span>
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
-                      View
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <CreditCard className="text-blue-600 mr-2" size={16} />
-                      <span className="text-sm font-medium">CNIC Back</span>
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
-                      View
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="text-green-600 mr-2" size={16} />
-                      <span className="text-sm font-medium">Certificates</span>
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
-                      View All
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">0 documents</p>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Paperclip className="text-orange-600 mr-2" size={16} />
-                      <span className="text-sm font-medium">Contracts</span>
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
-                      Download
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">0 documents</p>
-                </div>
-              </div>
-            </div>
-
+          
             {/* Personal Information */}
             <div className="lg:col-span-1">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -228,6 +157,77 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
               </div>
             </div>
           )}
+  {/* Profile Picture & Documents */}
+            <div className="lg:col-span-1">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <ImageIcon className="mr-2 text-purple-600" size={20} />
+                Profile & Documents
+              </h3>
+              
+              {/* Profile Picture Placeholder */}
+              <div className="bg-gray-100 rounded-lg p-6 mb-4 text-center">
+                <div className="bg-gray-200 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                  <User className="text-gray-400" size={32} />
+                </div>
+                <p className="text-sm text-gray-600">Profile Picture</p>
+                <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
+              </div>
+
+              {/* CNIC Documents */}
+              <div className="space-y-3">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <CreditCard className="text-blue-600 mr-2" size={16} />
+                      <span className="text-sm font-medium">CNIC Front</span>
+                    </div>
+                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                      View
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <CreditCard className="text-blue-600 mr-2" size={16} />
+                      <span className="text-sm font-medium">CNIC Back</span>
+                    </div>
+                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                      View
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <FileText className="text-green-600 mr-2" size={16} />
+                      <span className="text-sm font-medium">Certificates</span>
+                    </div>
+                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                      View All
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">0 documents</p>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Paperclip className="text-orange-600 mr-2" size={16} />
+                      <span className="text-sm font-medium">Contracts</span>
+                    </div>
+                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                      Download
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">0 documents</p>
+                </div>
+              </div>
+            </div>
 
           {/* Employee Stats */}
           <div className="mt-8">
