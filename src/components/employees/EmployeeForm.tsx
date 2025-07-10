@@ -104,94 +104,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
   
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* File Upload Section */}
-      <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-          <Upload className="mr-2" size={20} />
-          Documents & Photos
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Profile Picture */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <User className="inline mr-1" size={16} />
-              Profile Picture
-            </label>
-            <FileUpload
-              accept="image/*"
-              onFileSelect={(file) => setFiles(prev => ({ ...prev, profilePic: file }))}
-              selectedFile={files.profilePic}
-              placeholder="Upload employee photo"
-            />
-          </div>
-          
-          {/* CNIC Front */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <CreditCard className="inline mr-1" size={16} />
-              CNIC Front
-            </label>
-            <FileUpload
-              accept="image/*"
-              onFileSelect={(file) => setFiles(prev => ({ ...prev, cnicFront: file }))}
-              selectedFile={files.cnicFront}
-              placeholder="Upload CNIC front"
-            />
-          </div>
-          
-          {/* CNIC Back */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <CreditCard className="inline mr-1" size={16} />
-              CNIC Back
-            </label>
-            <FileUpload
-              accept="image/*"
-              onFileSelect={(file) => setFiles(prev => ({ ...prev, cnicBack: file }))}
-              selectedFile={files.cnicBack}
-              placeholder="Upload CNIC back"
-            />
-          </div>
-        </div>
-        
-        {/* Additional Documents */}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <FileText className="inline mr-1" size={16} />
-            Certificates & Qualifications
-          </label>
-          <FileUpload
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            multiple
-            onFileSelect={(file) => setFiles(prev => ({
-              ...prev,
-              certificates: [...prev.certificates, file]
-            }))}
-            selectedFiles={files.certificates}
-            placeholder="Upload educational certificates, training documents"
-          />
-        </div>
-        
-        {/* Contracts & Legal Documents */}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <FileText className="inline mr-1" size={16} />
-            Contracts & Legal Documents
-          </label>
-          <FileUpload
-            accept=".pdf,.doc,.docx"
-            multiple
-            onFileSelect={(file) => setFiles(prev => ({
-              ...prev,
-              contracts: [...prev.contracts, file]
-            }))}
-            selectedFiles={files.contracts}
-            placeholder="Upload employment contracts, agreements"
-          />
-        </div>
-      </div>
-      
+     
       {/* Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="md:col-span-2">
@@ -368,6 +281,93 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
         <p className="text-xs text-gray-500 mt-2">
           These are the days when the employee is not required to work.
         </p>
+      </div>
+       {/* File Upload Section */}
+      <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <Upload className="mr-2" size={20} />
+          Documents & Photos
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Profile Picture */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <User className="inline mr-1" size={16} />
+              Profile Picture
+            </label>
+            <FileUpload
+              accept="image/*"
+              onFileSelect={(file) => setFiles(prev => ({ ...prev, profilePic: file }))}
+              selectedFile={files.profilePic}
+              placeholder="Upload employee photo"
+            />
+          </div>
+          
+          {/* CNIC Front */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <CreditCard className="inline mr-1" size={16} />
+              CNIC Front
+            </label>
+            <FileUpload
+              accept="image/*"
+              onFileSelect={(file) => setFiles(prev => ({ ...prev, cnicFront: file }))}
+              selectedFile={files.cnicFront}
+              placeholder="Upload CNIC front"
+            />
+          </div>
+          
+          {/* CNIC Back */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <CreditCard className="inline mr-1" size={16} />
+              CNIC Back
+            </label>
+            <FileUpload
+              accept="image/*"
+              onFileSelect={(file) => setFiles(prev => ({ ...prev, cnicBack: file }))}
+              selectedFile={files.cnicBack}
+              placeholder="Upload CNIC back"
+            />
+          </div>
+        </div>
+        
+        {/* Additional Documents */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <FileText className="inline mr-1" size={16} />
+            Certificates & Qualifications
+          </label>
+          <FileUpload
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            multiple
+            onFileSelect={(file) => setFiles(prev => ({
+              ...prev,
+              certificates: [...prev.certificates, file]
+            }))}
+            selectedFiles={files.certificates}
+            placeholder="Upload educational certificates, training documents"
+          />
+        </div>
+        
+        {/* Contracts & Legal Documents */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <FileText className="inline mr-1" size={16} />
+            Contracts & Legal Documents
+          </label>
+          <FileUpload
+            accept=".pdf,.doc,.docx"
+            multiple
+            onFileSelect={(file) => setFiles(prev => ({
+              ...prev,
+              contracts: [...prev.contracts, file]
+            }))}
+            selectedFiles={files.contracts}
+            placeholder="Upload employment contracts, agreements"
+          />
+        </div>
       </div>
       
       <div className="flex justify-end gap-3">
