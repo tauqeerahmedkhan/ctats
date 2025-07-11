@@ -318,6 +318,13 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
                             <Download size={16} className="mr-2" />
                             Export CSV
                           </button>
+                          <button
+                            onClick={() => handleViewEmployee(employee)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Eye size={16} className="mr-2" />
+                            View Documents
+                          </button>
                         </div>
                       </div>
                     </div>
