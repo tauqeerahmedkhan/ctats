@@ -428,11 +428,17 @@ const importV1Data = async (v1Data: any): Promise<{ success: boolean; message: s
 
 export const importDbFromSql = async (sqlData: string): Promise<{ success: boolean; message: string }> => {
   try {
-    // Parse SQL INSERT statements
+    // Enhanced SQL parsing with v1.0 support
     const lines = sqlData.split('\n').filter(line => line.trim());
     let employeeCount = 0;
     let attendanceCount = 0;
     let settingsCount = 0;
+
+    // Check if this is v1.0 SQL format
+    const isV1Format = sqlData.includes('CREATE TABLE IF NOT EXISTS employees') || 
+                       sqlData.includes('employees (') ||
+                       sqlData.includes('attendance (') ||
+                       sqlData.includes('settings (');
 
     // Clear existing data first
     await supabase.from('attendance').delete().neq('id', 0);
@@ -443,14 +449,16 @@ export const importDbFromSql = async (sqlData: string): Promise<{ success: boole
       const trimmedLine = line.trim();
       
       // Skip comments and empty lines
-      if (trimmedLine.startsWith('--') || !trimmedLine) continue;
+      if (trimmedLine.startsWith('--') || trimmedLine.startsWith('/*') || 
+          trimmedLine.startsWith('CREATE') || trimmedLine.startsWith('ALTER') ||
+          trimmedLine.startsWith('DROP') || !trimmedLine) continue;
       
       // Parse INSERT statements
       if (trimmedLine.toLowerCase().startsWith('insert into employees')) {
         const valuesMatch = trimmedLine.match(/VALUES\s*(.+);?$/i);
         if (valuesMatch) {
           const valuesStr = valuesMatch[1].replace(/;$/, '');
-          const employees = parseInsertValues(valuesStr, 'employees');
+          const employees = parseInsertValues(valuesStr, 'employees', isV1Format);
           
           if (employees.length > 0) {
             const { error } = await supabase.from('employees').insert(employees);
@@ -462,7 +470,7 @@ export const importDbFromSql = async (sqlData: string): Promise<{ success: boole
         const valuesMatch = trimmedLine.match(/VALUES\s*(.+);?$/i);
         if (valuesMatch) {
           const valuesStr = valuesMatch[1].replace(/;$/, '');
-          const attendance = parseInsertValues(valuesStr, 'attendance');
+          const attendance = parseInsertValues(valuesStr, 'attendance', isV1Format);
           
           if (attendance.length > 0) {
             const { error } = await supabase.from('attendance').insert(attendance);
@@ -474,7 +482,7 @@ export const importDbFromSql = async (sqlData: string): Promise<{ success: boole
         const valuesMatch = trimmedLine.match(/VALUES\s*(.+);?$/i);
         if (valuesMatch) {
           const valuesStr = valuesMatch[1].replace(/;$/, '');
-          const settings = parseInsertValues(valuesStr, 'settings');
+          const settings = parseInsertValues(valuesStr, 'settings', isV1Format);
           
           if (settings.length > 0) {
             const { error } = await supabase.from('settings').insert(settings);
@@ -485,20 +493,36 @@ export const importDbFromSql = async (sqlData: string): Promise<{ success: boole
       }
     }
 
+    // Add default settings if none were imported
+    if (settingsCount === 0) {
+      const defaultSettings = [
+        { key: 'weekends', value: [0, 6] },
+        { key: 'holidays', value: [] },
+        { key: 'shifts', value: {
+          morning: { start: '09:00', end: '17:00' },
+          night: { start: '21:00', end: '05:00' }
+        }}
+      ];
+      
+      const { error } = await supabase.from('settings').insert(defaultSettings);
+      if (error) throw error;
+      settingsCount = defaultSettings.length;
+    }
+
     return {
       success: true,
-      message: `Successfully imported ${employeeCount} employees, ${attendanceCount} attendance records, and ${settingsCount} settings.`
+      message: `Successfully imported SQL data: ${employeeCount} employees, ${attendanceCount} attendance records, and ${settingsCount} settings.${isV1Format ? ' (v1.0 format detected and converted)' : ''}`
     };
   } catch (error) {
     console.error('SQL import error:', error);
     return {
       success: false,
-      message: 'Failed to import SQL data. Please check the file format and try again.'
+      message: `Failed to import SQL data: ${error.message || 'Unknown error'}. Please check the file format and try again.`
     };
   }
 };
 
-const parseInsertValues = (valuesStr: string, tableName: string): any[] => {
+const parseInsertValues = (valuesStr: string, tableName: string, isV1Format: boolean = false): any[] => {
   try {
     const results: any[] = [];
     
@@ -511,22 +535,42 @@ const parseInsertValues = (valuesStr: string, tableName: string): any[] => {
       const parsedValues = parseRowValues(values);
       
       if (tableName === 'employees') {
-        results.push({
-          id: parsedValues[0],
-          name: parsedValues[1],
-          department: parsedValues[2] === 'NULL' ? null : parsedValues[2],
-          father_name: parsedValues[3] === 'NULL' ? null : parsedValues[3],
-          dob: parsedValues[4] === 'NULL' ? null : parsedValues[4],
-          cnic: parsedValues[5] === 'NULL' ? null : parsedValues[5],
-          address: parsedValues[6] === 'NULL' ? null : parsedValues[6],
-          phone1: parsedValues[7] === 'NULL' ? null : parsedValues[7],
-          phone2: parsedValues[8] === 'NULL' ? null : parsedValues[8],
-          education: parsedValues[9] === 'NULL' ? null : parsedValues[9],
-          shift: parsedValues[10],
-          weekends: JSON.parse(parsedValues[11]),
-          created_at: parsedValues[12],
-          updated_at: parsedValues[13],
-        });
+        if (isV1Format) {
+          // Handle v1.0 format which might have different column order
+          results.push({
+            id: parsedValues[0] || `EMP${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`,
+            name: parsedValues[1],
+            department: parsedValues[2] === 'NULL' ? null : parsedValues[2],
+            father_name: parsedValues[3] === 'NULL' ? null : parsedValues[3],
+            dob: parsedValues[4] === 'NULL' ? null : parsedValues[4],
+            cnic: parsedValues[5] === 'NULL' ? null : parsedValues[5],
+            address: parsedValues[6] === 'NULL' ? null : parsedValues[6],
+            phone1: parsedValues[7] === 'NULL' ? null : parsedValues[7],
+            phone2: parsedValues[8] === 'NULL' ? null : parsedValues[8],
+            education: parsedValues[9] === 'NULL' ? null : parsedValues[9],
+            shift: parsedValues[10] || 'morning',
+            weekends: parsedValues[11] ? JSON.parse(parsedValues[11]) : [0, 6],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        } else {
+          results.push({
+            id: parsedValues[0],
+            name: parsedValues[1],
+            department: parsedValues[2] === 'NULL' ? null : parsedValues[2],
+            father_name: parsedValues[3] === 'NULL' ? null : parsedValues[3],
+            dob: parsedValues[4] === 'NULL' ? null : parsedValues[4],
+            cnic: parsedValues[5] === 'NULL' ? null : parsedValues[5],
+            address: parsedValues[6] === 'NULL' ? null : parsedValues[6],
+            phone1: parsedValues[7] === 'NULL' ? null : parsedValues[7],
+            phone2: parsedValues[8] === 'NULL' ? null : parsedValues[8],
+            education: parsedValues[9] === 'NULL' ? null : parsedValues[9],
+            shift: parsedValues[10],
+            weekends: JSON.parse(parsedValues[11]),
+            created_at: parsedValues[12],
+            updated_at: parsedValues[13],
+          });
+        }
       } else if (tableName === 'attendance') {
         results.push({
           employee_id: parsedValues[0],
@@ -537,15 +581,15 @@ const parseInsertValues = (valuesStr: string, tableName: string): any[] => {
           shift: parsedValues[5],
           hours: parseFloat(parsedValues[6]) || 0,
           overtime_hours: parseFloat(parsedValues[7]) || 0,
-          created_at: parsedValues[8],
-          updated_at: parsedValues[9],
+          created_at: parsedValues[8] || new Date().toISOString(),
+          updated_at: parsedValues[9] || new Date().toISOString(),
         });
       } else if (tableName === 'settings') {
         results.push({
           key: parsedValues[0],
           value: JSON.parse(parsedValues[1]),
-          created_at: parsedValues[2],
-          updated_at: parsedValues[3],
+          created_at: parsedValues[2] || new Date().toISOString(),
+          updated_at: parsedValues[3] || new Date().toISOString(),
         });
       }
     }
@@ -605,7 +649,8 @@ export const exportDbToSql = async (): Promise<string> => {
     const data = await exportDbToJson();
     
     let sql = '-- Employee Attendance System Database Export\n';
-    sql += `-- Generated on ${new Date().toISOString()}\n\n`;
+    sql += `-- Generated on ${new Date().toISOString()}\n`;
+    sql += '-- Compatible with v2.0 format\n\n';
     
     // Export employees
     sql += '-- Employees Table\n';
@@ -637,10 +682,64 @@ export const exportDbToSql = async (): Promise<string> => {
       sql += settingsValues.join(',\n') + ';\n\n';
     }
     
+    sql += '-- End of export\n';
     return sql;
   } catch (error) {
     console.error('Error exporting to SQL:', error);
     throw error;
+  }
+};
+
+export const clearAllData = async (): Promise<{ success: boolean; message: string }> => {
+  try {
+    // Clear all data in correct order (attendance first due to foreign key constraints)
+    const { error: attendanceError } = await supabase
+      .from('attendance')
+      .delete()
+      .neq('id', 0);
+    
+    if (attendanceError) throw attendanceError;
+
+    const { error: employeesError } = await supabase
+      .from('employees')
+      .delete()
+      .neq('id', '');
+    
+    if (employeesError) throw employeesError;
+
+    const { error: settingsError } = await supabase
+      .from('settings')
+      .delete()
+      .neq('id', 0);
+    
+    if (settingsError) throw settingsError;
+
+    // Re-insert default settings
+    const defaultSettings = [
+      { key: 'weekends', value: [0, 6] },
+      { key: 'holidays', value: [] },
+      { key: 'shifts', value: {
+        morning: { start: '09:00', end: '17:00' },
+        night: { start: '21:00', end: '05:00' }
+      }}
+    ];
+
+    const { error: insertError } = await supabase
+      .from('settings')
+      .insert(defaultSettings);
+    
+    if (insertError) throw insertError;
+
+    return {
+      success: true,
+      message: 'All data has been cleared successfully. Default settings have been restored.'
+    };
+  } catch (error) {
+    console.error('Error clearing database:', error);
+    return {
+      success: false,
+      message: `Failed to clear database: ${error.message || 'Unknown error'}`
+    };
   }
 };
 

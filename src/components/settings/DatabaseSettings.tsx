@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { Button } from '../common/Button';
 import { ImportExportMenu } from '../common/ImportExportMenu';
-import { exportDbToJson, importDbFromJson, exportDbToSql, importDbFromSql, generateSampleData } from '../../services/databaseService';
-import { Database, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import { exportDbToJson, importDbFromJson, exportDbToSql, importDbFromSql, generateSampleData, clearAllData } from '../../services/databaseService';
+import { Database, RefreshCw, FileSpreadsheet, Trash2, AlertTriangle } from 'lucide-react';
 
 export const DatabaseSettings: React.FC = () => {
   const { addToast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   
   const handleExportJson = async () => {
     try {
@@ -109,6 +110,43 @@ export const DatabaseSettings: React.FC = () => {
     }
   };
 
+  const handleClearDatabase = async () => {
+    const confirmed = window.confirm(
+      'WARNING: This will permanently delete ALL data including employees, attendance records, and settings. This action cannot be undone.\n\nAre you absolutely sure you want to continue?'
+    );
+    
+    if (!confirmed) return;
+
+    const doubleConfirmed = window.confirm(
+      'FINAL WARNING: You are about to delete ALL data. Type "DELETE" in the next prompt to confirm.'
+    );
+    
+    if (!doubleConfirmed) return;
+
+    const userInput = window.prompt('Type "DELETE" to confirm database reset:');
+    if (userInput !== 'DELETE') {
+      addToast('Database reset cancelled - confirmation text did not match', 'info');
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      const result = await clearAllData();
+      if (result.success) {
+        addToast(result.message, 'success');
+        // Refresh the page to reload all data
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        addToast(result.message, 'error');
+      }
+    } catch (error) {
+      console.error('Error clearing database:', error);
+      addToast('Failed to clear database', 'error');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   const getJsonTemplate = () => {
     return JSON.stringify({
       employees: [],
@@ -121,6 +159,7 @@ export const DatabaseSettings: React.FC = () => {
 
   const getSqlTemplate = () => {
     return `-- Employee Attendance System Database Import
+-- Supports both v1.0 and v2.0 formats
 -- Paste your SQL INSERT statements here
 
 INSERT INTO employees (id, name, department, shift, weekends) VALUES
@@ -150,11 +189,11 @@ INSERT INTO settings (key, value) VALUES
             <h3 className="font-medium text-gray-800">Data Management</h3>
           </div>
           <p className="text-gray-600 text-sm mb-4">
-            Import and export your complete database in multiple formats including legacy v1.0 support.
+            Import and export your complete database in multiple formats with v1.0 legacy support.
           </p>
           <ImportExportMenu
             title="Complete Database Management"
-            description="Full database backup and restore with v1.0 compatibility"
+            description="Full database backup and restore with v1.0/v2.0 compatibility"
             onExportJson={handleExportJson}
             onImportJson={handleImportJson}
             onExportSql={handleExportSql}
@@ -184,6 +223,41 @@ INSERT INTO settings (key, value) VALUES
         </div>
       </div>
       
+      {/* Database Reset Section */}
+      <div className="mt-8 p-6 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-center mb-4">
+          <AlertTriangle className="text-red-600 mr-3" size={24} />
+          <h3 className="text-lg font-semibold text-red-800">Danger Zone</h3>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg border border-red-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <h4 className="font-medium text-red-800 mb-2">Reset Database</h4>
+              <p className="text-red-700 text-sm mb-4">
+                Permanently delete all employees, attendance records, and custom settings. 
+                This action cannot be undone and will restore default system settings.
+              </p>
+              <div className="text-xs text-red-600 space-y-1">
+                <p>• All employee data will be lost</p>
+                <p>• All attendance records will be deleted</p>
+                <p>• Custom settings will be reset to defaults</p>
+                <p>• This action requires multiple confirmations</p>
+              </div>
+            </div>
+            <Button
+              variant="danger"
+              onClick={handleClearDatabase}
+              icon={<Trash2 size={18} />}
+              isLoading={isClearing}
+              className="ml-4"
+            >
+              Reset Database
+            </Button>
+          </div>
+        </div>
+      </div>
+      
       <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
         <h3 className="text-sm font-medium text-blue-800 mb-2">About Supabase Storage & Legacy Support</h3>
         <div className="text-sm text-blue-700 space-y-2">
@@ -193,12 +267,13 @@ INSERT INTO settings (key, value) VALUES
             across all your devices.
           </p>
           <p>
-            <strong>Legacy v1.0 Support:</strong> The import function automatically detects and converts
-            data from the previous localStorage-based version (v1.0) to the new Supabase format.
-            Simply import your old JSON backup and the system will handle the migration.
+            <strong>Enhanced Legacy Support:</strong> The import functions automatically detect and convert
+            data from the previous localStorage-based version (v1.0) to the new Supabase format (v2.0).
+            Both JSON and SQL imports support v1.0 format detection and conversion.
           </p>
           <p>
-            Regular exports are recommended for additional security and data portability.
+            <strong>SQL Import:</strong> Now supports importing SQL files from v1.0 exports with automatic
+            format detection and conversion. Regular exports are recommended for data security.
           </p>
         </div>
       </div>
