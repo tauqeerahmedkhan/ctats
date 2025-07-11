@@ -3,23 +3,27 @@ import { useDatabase } from '../../context/DatabaseContext';
 import { useToast } from '../../context/ToastContext';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
+import { Modal } from '../common/Modal';
 import { supabase } from '../../lib/supabase';
-import { User, Mail, Shield, UserPlus, Trash2, Eye, EyeOff, Key, Settings, Users, Crown, UserCheck } from 'lucide-react';
+import { UserRole, getRolePermissions, hasPermission } from '../../types/User';
+import { User, Mail, Shield, UserPlus, Trash2, Eye, EyeOff, Key, Settings, Users, Crown, UserCheck, Edit } from 'lucide-react';
 
 interface UserProfile {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at?: string;
-  role?: string;
+  role: UserRole;
 }
 
 export const UserSettings: React.FC = () => {
-  const { user } = useDatabase();
+  const { user, userRole, updateUserRole, hasPermission: checkPermission } = useDatabase();
   const { addToast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -41,7 +45,7 @@ export const UserSettings: React.FC = () => {
           email: user.email || '',
           created_at: user.created_at || '',
           last_sign_in_at: user.last_sign_in_at || undefined,
-          role: 'admin' // For now, all users are admins
+          role: userRole
         }]);
       }
     } catch (error) {
@@ -49,6 +53,27 @@ export const UserSettings: React.FC = () => {
       addToast('Failed to load user information', 'error');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (newRole: UserRole) => {
+    if (!selectedUser) return;
+    
+    try {
+      // In a real application, you would update the role in the database
+      // For now, we'll just update the local state
+      updateUserRole(newRole);
+      
+      setUsers(prev => prev.map(u => 
+        u.id === selectedUser.id ? { ...u, role: newRole } : u
+      ));
+      
+      addToast(`Role updated to ${newRole}`, 'success');
+      setShowRoleModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error updating role:', error);
+      addToast('Failed to update role', 'error');
     }
   };
 
@@ -110,6 +135,26 @@ export const UserSettings: React.FC = () => {
     } catch (error) {
       console.error('Error updating profile:', error);
       addToast('Failed to update profile', 'error');
+    }
+  };
+
+  const getRoleColor = (role: UserRole) => {
+    switch (role) {
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'manager': return 'bg-blue-100 text-blue-800';
+      case 'employee': return 'bg-green-100 text-green-800';
+      case 'viewer': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoleIcon = (role: UserRole) => {
+    switch (role) {
+      case 'admin': return <Crown className="text-red-600" size={16} />;
+      case 'manager': return <UserCheck className="text-blue-600" size={16} />;
+      case 'employee': return <User className="text-green-600" size={16} />;
+      case 'viewer': return <Eye className="text-gray-600" size={16} />;
+      default: return <User className="text-gray-600" size={16} />;
     }
   };
 
@@ -197,32 +242,38 @@ export const UserSettings: React.FC = () => {
           <div>
             <h4 className="font-medium text-gray-800 mb-3 flex items-center">
               <Shield className="text-blue-500 mr-2" size={18} />
-              Security Features
+              Current Role Permissions
             </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Row-level security (RLS) policies</span>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center mb-3">
+                {getRoleIcon(userRole)}
+                <span className="ml-2 font-medium text-gray-800 capitalize">{userRole}</span>
               </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Encrypted data transmission</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Secure cloud storage</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Audit trail for data changes</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Session management</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-gray-700">Password policies</span>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('viewDashboard') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-gray-700">Dashboard Access</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('editEmployees') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-gray-700">Employee Management</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('editAttendance') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-gray-700">Attendance Management</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('viewReports') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-gray-700">Reports Access</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('editSettings') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-gray-700">Settings Management</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('clearDatabase') ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-gray-700">Database Management</span>
+                </div>
               </div>
             </div>
           </div>
@@ -269,9 +320,24 @@ export const UserSettings: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Current Role
               </label>
-              <div className="flex items-center p-3 bg-white rounded-md border border-gray-200">
-                <Crown className="text-yellow-500 mr-3" size={18} />
-                <span className="text-gray-800 font-medium">Administrator</span>
+              <div className="flex items-center justify-between p-3 bg-white rounded-md border border-gray-200">
+                <div className="flex items-center">
+                  {getRoleIcon(userRole)}
+                  <span className="ml-2 text-gray-800 font-medium capitalize">{userRole}</span>
+                </div>
+                {checkPermission('manageUsers') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedUser(users[0]);
+                      setShowRoleModal(true);
+                    }}
+                    icon={<Edit size={16} />}
+                  >
+                    Change
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -374,6 +440,66 @@ export const UserSettings: React.FC = () => {
         </div>
       </Card>
 
+      {/* Role Management Modal */}
+      <Modal
+        isOpen={showRoleModal}
+        onClose={() => {
+          setShowRoleModal(false);
+          setSelectedUser(null);
+        }}
+        title="Change User Role"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              Select a new role for <strong>{selectedUser?.email}</strong>
+            </p>
+          </div>
+          
+          <div className="space-y-3">
+            {(['admin', 'manager', 'employee', 'viewer'] as UserRole[]).map((role) => {
+              const permissions = getRolePermissions(role);
+              const permissionCount = Object.values(permissions).filter(Boolean).length;
+              
+              return (
+                <button
+                  key={role}
+                  onClick={() => handleRoleChange(role)}
+                  className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
+                    selectedUser?.role === role
+                      ? 'border-navy-500 bg-navy-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {getRoleIcon(role)}
+                      <div className="ml-3">
+                        <div className="font-medium text-gray-800 capitalize">{role}</div>
+                        <div className="text-sm text-gray-600">
+                          {permissionCount} permissions enabled
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(role)}`}>
+                      {role.toUpperCase()}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          
+          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+            <p className="text-amber-800 text-sm">
+              <strong>Note:</strong> Role changes take effect immediately. Make sure you understand 
+              the permissions associated with each role before making changes.
+            </p>
+          </div>
+        </div>
+      </Modal>
+
       {/* Account Actions */}
       <Card title="Account Actions">
         <div className="space-y-4">
@@ -431,6 +557,12 @@ export const UserSettings: React.FC = () => {
                 <span className="text-gray-600">RBAC:</span>
                 <span className="text-gray-800">Row Level Security</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Your Role:</span>
+                <span className={`text-sm px-2 py-1 rounded ${getRoleColor(userRole)}`}>
+                  {userRole.toUpperCase()}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -438,19 +570,19 @@ export const UserSettings: React.FC = () => {
             <h4 className="font-medium text-gray-800 mb-3">Features</h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('viewAttendance') ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span className="text-gray-700">Real-time attendance tracking</span>
               </div>
               <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('viewReports') ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span className="text-gray-700">Overtime calculation</span>
               </div>
               <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('viewReports') ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span className="text-gray-700">Advanced analytics</span>
               </div>
               <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('exportDatabase') ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span className="text-gray-700">Data export/import</span>
               </div>
               <div className="flex items-center">
@@ -458,7 +590,7 @@ export const UserSettings: React.FC = () => {
                 <span className="text-gray-700">Role-based access control</span>
               </div>
               <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div className={`w-2 h-2 rounded-full mr-2 ${checkPermission('importDatabase') ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span className="text-gray-700">Legacy data migration</span>
               </div>
             </div>
