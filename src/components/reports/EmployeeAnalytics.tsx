@@ -102,7 +102,8 @@ export const EmployeeAnalytics: React.FC<EmployeeAnalyticsProps> = ({
         break;
       default: // month
         startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-        endDate = `${year}-${String(month).padStart(2, '0')}-31`;
+        const lastDayOfMonth = new Date(year, month, 0).getDate();
+        endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`;
     }
 
     return { startDate, endDate };
