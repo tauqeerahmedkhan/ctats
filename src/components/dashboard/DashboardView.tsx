@@ -12,7 +12,11 @@ import {
   Calendar, Zap, UserPlus, BarChart3, AlertTriangle
 } from 'lucide-react';
 
-export const DashboardView: React.FC = () => {
+interface DashboardViewProps {
+  onNavigate?: (view: string) => void;
+}
+
+export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   const { addToast } = useToast();
   const [stats, setStats] = useState({
     totalEmployees: 0, presentToday: 0, absentToday: 0, averageHours: 0,
@@ -97,9 +101,10 @@ export const DashboardView: React.FC = () => {
     }
   };
 
-  const navigateTo = (view: string) => {
-    const event = new CustomEvent('navigate', { detail: view });
-    window.dispatchEvent(event);
+  const handleNavigate = (view: string) => {
+    if (onNavigate) {
+      onNavigate(view);
+    }
   };
 
   if (isLoading) {
@@ -185,7 +190,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <QuickActions onNavigate={navigateTo} />
+        <QuickActions onNavigate={handleNavigate} />
         <SystemStatus />
       </div>
 
@@ -195,15 +200,15 @@ export const DashboardView: React.FC = () => {
         <Card title="Tips & Features">
           <div className="space-y-4">
             {[
-              { icon: 'Download', title: 'Data Management', desc: 'Import/export data in multiple formats with legacy v1.0 support.', action: 'settings' },
-              { icon: 'Zap', title: 'Overtime Tracking', desc: 'Automatic calculation for hours worked beyond 8 hours per day.', action: 'reports' },
-              { icon: 'Shield', title: 'Security & RBAC', desc: 'Role-based access control with Supabase authentication.', action: 'settings' }
+              { title: 'Data Management', desc: 'Import/export data in multiple formats with legacy v1.0 support.', action: 'settings' },
+              { title: 'Overtime Tracking', desc: 'Automatic calculation for hours worked beyond 8 hours per day.', action: 'reports' },
+              { title: 'Security & RBAC', desc: 'Role-based access control with Supabase authentication.', action: 'settings' }
             ].map((tip, i) => (
               <div key={i} className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
                 <div className="font-semibold text-blue-800">{tip.title}</div>
                 <div className="text-blue-700 text-sm mt-1">{tip.desc}</div>
                 <Button variant="outline" size="sm" className="mt-2 text-blue-600 border-blue-300 hover:bg-blue-50"
-                  onClick={() => navigateTo(tip.action)}>
+                  onClick={() => handleNavigate(tip.action)}>
                   Go to {tip.title.split(' ')[0]}
                 </Button>
               </div>

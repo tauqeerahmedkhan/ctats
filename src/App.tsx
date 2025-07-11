@@ -31,6 +31,11 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Handle navigation from dashboard and other components
+  const handleNavigate = (view: string) => {
+    setActiveView(view as 'dashboard' | 'attendance' | 'employees' | 'settings' | 'reports');
+  };
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -61,7 +66,7 @@ function AppContent() {
         />
         <main className="flex-1 overflow-auto p-4 transition-all duration-300">
           <div className="container mx-auto">
-            {activeView === 'dashboard' && <DashboardView />}
+            {activeView === 'dashboard' && <DashboardView onNavigate={handleNavigate} />}
             {activeView === 'attendance' && <AttendanceView />}
             {activeView === 'employees' && <EmployeeView />}
             {activeView === 'settings' && <SettingsView />}

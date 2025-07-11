@@ -111,9 +111,8 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        // Navigate to settings/users
-                        const event = new CustomEvent('navigate', { detail: 'settings' });
-                        window.dispatchEvent(event);
+                        // This would need to be passed down as a prop or use a context
+                        window.location.hash = '#settings';
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                     >

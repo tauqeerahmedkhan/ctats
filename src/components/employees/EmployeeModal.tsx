@@ -171,6 +171,9 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                 </div>
                 <p className="text-sm text-gray-600">Profile Picture</p>
                 <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
+                <Button variant="outline" size="sm" className="mt-2">
+                  Upload Photo
+                </Button>
               </div>
 
               {/* CNIC Documents */}
@@ -181,11 +184,14 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                       <CreditCard className="text-blue-600 mr-2" size={16} />
                       <span className="text-sm font-medium">CNIC Front</span>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 text-xs">
                       View
-                    </button>
+                    </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
+                  <Button variant="outline" size="sm" className="mt-2 w-full">
+                    Upload CNIC Front
+                  </Button>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -194,11 +200,14 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                       <CreditCard className="text-blue-600 mr-2" size={16} />
                       <span className="text-sm font-medium">CNIC Back</span>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 text-xs">
                       View
-                    </button>
+                    </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Not uploaded</p>
+                  <Button variant="outline" size="sm" className="mt-2 w-full">
+                    Upload CNIC Back
+                  </Button>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -207,11 +216,14 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                       <FileText className="text-green-600 mr-2" size={16} />
                       <span className="text-sm font-medium">Certificates</span>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 text-xs">
                       View All
-                    </button>
+                    </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">0 documents</p>
+                  <Button variant="outline" size="sm" className="mt-2 w-full">
+                    Upload Certificates
+                  </Button>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -220,11 +232,14 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                       <Paperclip className="text-orange-600 mr-2" size={16} />
                       <span className="text-sm font-medium">Contracts</span>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-xs">
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 text-xs">
                       Download
-                    </button>
+                    </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">0 documents</p>
+                  <Button variant="outline" size="sm" className="mt-2 w-full">
+                    Upload Contract
+                  </Button>
                 </div>
               </div>
             </div>
