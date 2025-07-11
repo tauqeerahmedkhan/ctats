@@ -152,13 +152,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         </div>
         
         <div className="flex flex-wrap gap-3">
-          <Button variant="primary" onClick={() => navigateTo('attendance')} icon={<Calendar size={18} />}>
+          <Button variant="primary" onClick={() => handleNavigate('attendance')} icon={<Calendar size={18} />}>
             Mark Attendance
           </Button>
-          <Button variant="outline" onClick={() => navigateTo('employees')} icon={<UserPlus size={18} />}>
+          <Button variant="outline" onClick={() => handleNavigate('employees')} icon={<UserPlus size={18} />}>
             Add Employee
           </Button>
-          <Button variant="outline" onClick={() => navigateTo('reports')} icon={<BarChart3 size={18} />}>
+          <Button variant="outline" onClick={() => handleNavigate('reports')} icon={<BarChart3 size={18} />}>
             View Reports
           </Button>
         </div>
@@ -166,13 +166,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Employees" value={stats.totalEmployees} icon={Users} 
-          color="bg-gradient-to-br from-blue-500 to-blue-600" onClick={() => navigateTo('employees')} />
+          color="bg-gradient-to-br from-blue-500 to-blue-600" onClick={() => handleNavigate('employees')} />
         <StatCard title="Avg Present/Day" value={stats.presentToday} icon={UserCheck} 
-          color="bg-gradient-to-br from-green-500 to-green-600" onClick={() => navigateTo('attendance')} />
+          color="bg-gradient-to-br from-green-500 to-green-600" onClick={() => handleNavigate('attendance')} />
         <StatCard title="Avg Absent/Day" value={stats.absentToday} icon={UserX} 
-          color="bg-gradient-to-br from-red-500 to-red-600" onClick={() => navigateTo('reports')} />
+          color="bg-gradient-to-br from-red-500 to-red-600" onClick={() => handleNavigate('reports')} />
         <StatCard title="Avg Hours/Employee" value={stats.averageHours.toFixed(1)} icon={Clock} 
-          color="bg-gradient-to-br from-purple-500 to-purple-600" onClick={() => navigateTo('reports')} />
+          color="bg-gradient-to-br from-purple-500 to-purple-600" onClick={() => handleNavigate('reports')} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
