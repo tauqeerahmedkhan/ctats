@@ -105,7 +105,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 1. Create a new project at [supabase.com](https://supabase.com)
 2. Run the provided migrations in the Supabase SQL editor
-3. Copy your project URL and anon key to the `.env` file
+3. **Enable user signups**: Go to Authentication → Settings in your Supabase dashboard and ensure "Enable new user signups" is turned ON
+4. **Disable email confirmation** (optional): In the same Authentication Settings, turn OFF "Enable email confirmations" for easier testing
+5. Copy your project URL and anon key to the `.env` file
 
 ### 4. Start Development Server
 
