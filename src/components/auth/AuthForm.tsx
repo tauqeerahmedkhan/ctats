@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
-import { Clock, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
+import { Clock, Mail, Lock, UserPlus, LogIn, AlertCircle } from 'lucide-react';
 
 export const AuthForm: React.FC = () => {
   const { signIn, signUp, error } = useDatabase();
@@ -11,6 +11,7 @@ export const AuthForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [signupDisabled, setSignupDisabled] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +36,14 @@ export const AuthForm: React.FC = () => {
         : await signIn(email, password);
 
       if (error) {
-        setLocalError(error.message);
+        // Check if signup is disabled
+        if (error.message.includes('Signups not allowed') || error.message.includes('signup_disabled')) {
+          setSignupDisabled(true);
+          setIsSignUp(false);
+          setLocalError('Account registration is currently disabled. Please sign in with an existing account or contact your administrator.');
+        } else {
+          setLocalError(error.message);
+        }
       } else if (isSignUp) {
         setLocalError('Check your email for a confirmation link');
       }
@@ -108,7 +116,17 @@ export const AuthForm: React.FC = () => {
 
             {(error || localError) && (
               <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <div className="flex items-start">
+                  <AlertCircle className="text-red-500 mr-2 mt-0.5 flex-shrink-0" size={16} />
+                  <div>
                 <p className="text-sm text-red-600">{error || localError}</p>
+                    {signupDisabled && (
+                      <p className="text-xs text-red-500 mt-2">
+                        New user registration is disabled in the system configuration.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -122,21 +140,36 @@ export const AuthForm: React.FC = () => {
               {isSignUp ? 'Create Account' : 'Sign In'}
             </Button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setLocalError(null);
-                }}
-                className="text-sm text-navy-600 hover:text-navy-700 font-medium"
-              >
-                {isSignUp 
-                  ? 'Already have an account? Sign in' 
-                  : "Don't have an account? Sign up"
-                }
-              </button>
-            </div>
+            {!signupDisabled && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setLocalError(null);
+                  }}
+                  className="text-sm text-navy-600 hover:text-navy-700 font-medium"
+                >
+                  {isSignUp 
+                    ? 'Already have an account? Sign in' 
+                    : "Don't have an account? Sign up"
+                  }
+                </button>
+              </div>
+            )}
+
+            {signupDisabled && (
+              <div className="text-center">
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <div className="flex items-center justify-center">
+                    <AlertCircle className="text-blue-500 mr-2" size={16} />
+                    <p className="text-sm text-blue-700">
+                      New registrations are disabled. Contact your administrator for account access.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </Card>
 
